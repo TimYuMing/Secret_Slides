@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>求婚回憶 · 幻燈片</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#fffaf9;
+    --bg-2:#ffeef3;
+    --frame-bg:#ffffff;
+    --accent-pink:#f3c3ce;
+    --accent-pink-strong:#e79bab;
+    --accent-gold:#d8b98a;
+    --accent-leaf:#b9cdb0;
+    --accent-vivid:#d94f78;   /* 控制項用的鮮明主色 */
+    --text-dark:#6d4c54;
+    --text-soft:#a9868d;
+
+    /* 圖片如何填滿播放區：cover（填滿裁切，不變形，預設）/ contain（完整顯示，可能留邊）/ fill（強制拉伸至剛好，可能變形） */
+    --media-fit:cover;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    font-family:'Noto Serif TC', serif;
+    color:var(--text-dark);
+    overflow:hidden;
+  }
+
+  /* ---------- 背景裝飾（浮動愛心 / 光斑 / 星光）---------- */
+  #bg-decor{
+    position:fixed; inset:0;
+    overflow:hidden;
+    z-index:1;
+    pointer-events:none;
+  }
+  .bg-blob{
+    position:absolute; border-radius:50%; filter:blur(70px);
+  }
+  .bg-blob.a{ width:440px; height:440px; background:var(--accent-pink); opacity:0.45; top:-140px; left:-120px; }
+  .bg-blob.b{ width:400px; height:400px; background:var(--accent-gold); opacity:0.3; bottom:-150px; right:-110px; }
+  .bg-blob.c{ width:300px; height:300px; background:var(--accent-pink-strong); opacity:0.18; top:40%; left:45%; transform:translate(-50%,-50%); }
+
+  .bg-heart{
+    position:absolute; bottom:-40px;
+    color:var(--accent-pink-strong);
+    opacity:0;
+    animation-name:floatHeart;
+    animation-timing-function:ease-in;
+    animation-iteration-count:infinite;
+    user-select:none;
+  }
+  @keyframes floatHeart{
+    0%{ transform:translateY(0) rotate(0deg) scale(1); opacity:0; }
+    12%{ opacity:0.55; }
+    88%{ opacity:0.35; }
+    100%{ transform:translateY(-104vh) rotate(12deg) scale(1.2); opacity:0; }
+  }
+
+  .bg-sparkle{
+    position:absolute; width:4px; height:4px; border-radius:50%;
+    background:var(--accent-gold);
+    animation-name:twinkle;
+    animation-timing-function:ease-in-out;
+    animation-iteration-count:infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{ opacity:0.15; transform:scale(0.7); }
+    50%{ opacity:0.95; transform:scale(1.3); }
+  }
+
+  /* ---------- 花邊框：四角小花草 + 細雙線外框 ---------- */
+  #frame-border{
+    display:none; /* 已改用「畫面邊框.png」圖片邊框 */
+    position:fixed; inset:16px;
+    border:1px solid rgba(216,185,138,0.55);
+    border-radius:2px;
+    z-index:3;
+    pointer-events:none;
+  }
+  #frame-border::before{
+    content:'';
+    position:absolute; inset:6px;
+    border:1px solid rgba(231,155,171,0.32);
+  }
+
+  .floral-corner{
+    display:none; /* 已改用「畫面邊框.png」圖片邊框 */
+    position:fixed; width:120px; height:120px;
+    z-index:3; pointer-events:none; opacity:0.85;
+  }
+  .floral-corner.tl{ top:10px; left:10px; }
+  .floral-corner.tr{ top:10px; right:10px; transform:scaleX(-1); }
+  .floral-corner.bl{ bottom:10px; left:10px; transform:scaleY(-1); }
+  .floral-corner.br{ bottom:10px; right:10px; transform:scale(-1,-1); }
+
+  /* ---------- Stage（固定尺寸的播放容器）---------- */
+  #stage-wrap{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    z-index:2;
+    opacity:1; visibility:visible;
+    transition:opacity .8s ease, visibility .8s ease;
+  }
+  /* 暫停畫面（提示／求婚）顯示時，跟起始頁淡出/淡入的手法一致，把底下的照片整個淡出藏起來 */
+  #stage-wrap.dimmed{
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+  }
+
+  #stage{
+    position:relative;
+    /* 邊框現在是「整個螢幕」的外框，所以跟著整個視窗滿版，並跟「畫面邊框.png」的比例（1672:941）對齊，邊框才不會被拉伸變形 */
+    width:min(100vw, 100vh * 1672 / 941);
+    aspect-ratio:1672 / 941;
+    max-width:2200px;
+    min-width:280px;
+    min-height:180px;
+  }
+
+  /* 實際照片／文字內容的安全範圍：依「畫面邊框.png」量出來的花朵/緞帶范圍，內縮這個比例才不會被邊框蓋住 */
+  #stage-content{
+    position:absolute;
+    left:8%; right:8%; top:8%; bottom:11%;
+  }
+
+  /* 邊框圖片：蓋在所有投影片上面，跟 stage 一樣大，不會被拉伸（比例已經跟 stage 對齊）*/
+  #stage-frame{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:fill;
+    z-index:5;
+    pointer-events:none;
+    user-select:none;
+  }
+
+  /* 每一張「投影片」都是填滿 stage 的容器，裡面可以放圖片／文字／自訂動畫，播放邏輯共用同一套 */
+  .slide{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    background:var(--frame-bg);
+    padding:7px;
+    border-radius:8px;
+    box-shadow: 0 18px 50px rgba(180,120,140,0.18), 0 2px 8px rgba(180,120,140,0.12);
+    border:1px solid rgba(216,185,138,0.35);
+    opacity:0;
+    transform:scale(0.985);
+    transition:opacity 1s ease, transform 1.1s ease;
+    pointer-events:none;
+  }
+  .slide.active{
+    opacity:1;
+    transform:scale(1);
+  }
+  /* 第一段／第二段（跟音樂同步的內容）淡入淡出放慢一點 */
+  .slide.slide-chapter{
+    transition:opacity 2s ease, transform 2.2s ease;
+  }
+
+  /* 圖片型內容：固定填滿容器，太小太大都會被拉到剛好的大小 */
+  .slide-media{
+    width:100%; height:100%;
+    object-fit:var(--media-fit);
+    display:block;
+    border-radius:4px;
+  }
+
+  /* 文字 / HTML 型內容 */
+  .slide-html{
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    padding:2.5%;
+    overflow:auto;
+    font-size:clamp(18px, 2.6vw, 34px);
+    line-height:1.9;
+    color:var(--text-dark);
+    border-radius:4px;
+  }
+
+  /* 自訂動畫型內容（JS/CSS 客製）：置中容器，交給掛載的程式自己畫 */
+  .slide-custom{
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:4px;
+    overflow:hidden;
+  }
+
+  /* ---- 序章 第一頁：文字逐行淡入 ---- */
+  .prologue-lines{
+    display:flex; flex-direction:column; align-items:center; gap:20px;
+    text-align:center;
+  }
+  .prologue-line{
+    font-family:'Noto Serif TC', serif;
+    font-size:clamp(26px, 4.2vw, 52px);
+    letter-spacing:1px;
+    color:var(--text-dark);
+    opacity:0;
+    transform:translateY(16px);
+    transition:opacity .8s ease, transform .8s ease;
+  }
+  .prologue-line.show{ opacity:1; transform:translateY(0); }
+
+  /* ---- 序章 待補頁 ---- */
+  .prologue-placeholder{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:clamp(24px, 3.6vw, 42px);
+    color:var(--text-soft);
+    letter-spacing:1px;
+  }
+
+  /* ---- 第一段 / 第二段：照片 + 文字敘述 + 小備註（跟其他純圖片一樣會跟著音樂時間軸自動換頁）---- */
+  .photo-block{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px;
+    width:100%; height:100%;
+  }
+  .photo-block-img{
+    max-width:96%;
+    max-height:76%;
+    object-fit:contain;
+    border-radius:2px;
+    background:#fff;
+    border:9px solid #fff;
+    border-bottom-width:24px;
+    box-shadow:0 16px 38px rgba(180,120,140,0.28), 0 3px 10px rgba(180,120,140,0.16);
+  }
+  .slide:nth-child(odd) .photo-block-img{ transform:rotate(-1.4deg); }
+  .slide:nth-child(even) .photo-block-img{ transform:rotate(1.3deg); }
+  .photo-block-caption{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:clamp(24px, 3.4vw, 42px);
+    color:var(--text-dark);
+    letter-spacing:0.5px;
+    position:relative;
+  }
+  .photo-block-note{
+    font-family:'Noto Serif TC', serif;
+    font-size:clamp(11px, 1vw, 14px);
+    color:var(--text-soft);
+    opacity:0.85;
+    letter-spacing:0.3px;
+  }
+  .photo-block-duo{
+    display:flex; align-items:center; justify-content:center;
+    gap:22px;
+    width:100%; flex:1; min-height:0;
+  }
+  .photo-block-duo-img{
+    max-width:47%;
+    max-height:96%;
+    object-fit:contain;
+    border-radius:2px;
+    background:#fff;
+    border:7px solid #fff;
+    border-bottom-width:18px;
+    box-shadow:0 14px 32px rgba(180,120,140,0.26), 0 2px 8px rgba(180,120,140,0.15);
+  }
+  .photo-block-duo-img:nth-child(1){ transform:rotate(-2.4deg); }
+  .photo-block-duo-img:nth-child(2){ transform:rotate(2.4deg); }
+
+  /* 隨機補在照片頁空白處的小裝飾（愛心／小花），由 JS 依每頁實際排版算出空白位置後加上，避免畫面太空洞 */
+  .block-decor{
+    position:absolute;
+    pointer-events:none;
+    user-select:none;
+    line-height:1;
+  }
+
+  /* ---- 序章：照片 + 文字說明頁 ---- */
+  .prologue-photo{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px;
+    width:100%; height:100%;
+  }
+  .prologue-photo-img{
+    max-width:96%;
+    max-height:86%;
+    object-fit:contain;
+    border-radius:2px;
+    background:#fff;
+    border:9px solid #fff;
+    border-bottom-width:26px;
+    box-shadow:0 16px 42px rgba(180,120,140,0.24), 0 3px 10px rgba(180,120,140,0.15);
+    opacity:0;
+    transform:translateY(14px) scale(0.98) rotate(-1.6deg);
+    transition:opacity 1.8s ease, transform 1.8s ease;
+  }
+  .prologue-photo-img.show{ opacity:1; transform:translateY(0) scale(1) rotate(-1.6deg); }
+  .prologue-photo-caption{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:clamp(24px, 3.4vw, 40px);
+    color:var(--text-dark);
+    letter-spacing:0.5px;
+    opacity:0;
+    transform:translateY(10px);
+    transition:opacity 1.4s ease, transform 1.4s ease;
+    position:relative;
+  }
+  .prologue-photo-caption.show{ opacity:1; transform:translateY(0); }
+
+  /* ---- 序章：左右兩張照片 + 文字說明頁 ---- */
+  .prologue-duo{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:20px;
+    width:100%; height:100%;
+  }
+  .prologue-duo-images{
+    display:flex; align-items:center; justify-content:center;
+    gap:14px;
+    width:100%; flex:1; min-height:0;
+  }
+  .prologue-duo-img{
+    max-width:47%;
+    max-height:96%;
+    object-fit:contain;
+    border-radius:2px;
+    background:#fff;
+    border:7px solid #fff;
+    border-bottom-width:18px;
+    box-shadow:0 14px 34px rgba(180,120,140,0.24), 0 2px 8px rgba(180,120,140,0.14);
+    opacity:0;
+    transform:translateY(14px) scale(0.98);
+    transition:opacity 1.8s ease, transform 1.8s ease;
+  }
+  .prologue-duo-img:nth-child(1){ transform:translateY(14px) scale(0.98) rotate(-2deg); }
+  .prologue-duo-img:nth-child(2){ transform:translateY(14px) scale(0.98) rotate(2deg); }
+  .prologue-duo-img:nth-child(1).show{ opacity:1; transform:translateY(0) scale(1) rotate(-2deg); }
+  .prologue-duo-img:nth-child(2).show{ opacity:1; transform:translateY(0) scale(1) rotate(2deg); }
+  .prologue-duo-caption{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:clamp(24px, 3.4vw, 40px);
+    color:var(--text-dark);
+    letter-spacing:0.5px;
+    text-align:center;
+    position:relative;
+  }
+
+  /* ---- 序章：4 格漫畫頁 ---- */
+  .prologue-comic{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:16px;
+    width:100%; height:100%; min-height:0;
+  }
+  .prologue-comic-caption{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:clamp(24px, 3.4vw, 40px);
+    color:var(--text-dark);
+    letter-spacing:0.5px;
+    text-align:center;
+    opacity:0;
+    transform:translateY(10px);
+    transition:opacity 1.4s ease, transform 1.4s ease;
+  }
+  .prologue-comic-caption.show{ opacity:1; transform:translateY(0); }
+  .prologue-comic-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:1fr 1fr;
+    gap:12px;
+    width:100%; flex:1; min-height:0;
+  }
+  .prologue-comic-img{
+    width:100%; height:100%;
+    min-width:0; min-height:0; /* 避免圖片原始尺寸把格子撐高，導致下面那排被容器切掉 */
+    object-fit:contain; /* 完整顯示整張圖片，不會裁切掉內容 */
+    border-radius:6px;
+    background:#fff;
+    padding:5px;
+    box-sizing:border-box;
+    box-shadow:0 14px 40px rgba(180,120,140,0.22), 0 2px 8px rgba(180,120,140,0.14);
+    border:1px solid rgba(216,185,138,0.35);
+    opacity:0;
+    transform:translateY(14px) scale(0.98);
+    transition:opacity 1.8s ease, transform 1.8s ease;
+  }
+  .prologue-comic-img.show{ opacity:1; transform:translateY(0) scale(1); }
+
+  /* ---- 序章 第二頁：LINE 群組聊天（不做手機邊框，直接顯示螢幕畫面，可以做大一點）---- */
+  .chat-screen{
+    position:relative;
+    /* 以容器高度為主來決定大小，確保頂部/底部不會被切掉，寬度再依手機螢幕比例自動算出來 */
+    height:96%;
+    width:auto;
+    max-width:96%;
+    aspect-ratio:375/700;
+    background:#e9e9e9;
+    border-radius:18px;
+    overflow:hidden;
+    display:flex; flex-direction:column;
+    box-shadow:0 22px 50px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .line-status{
+    height:28px; background:#f6f6f6; flex-shrink:0;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px 0; font-size:13px; color:#333; font-family:sans-serif;
+  }
+  .line-header{
+    height:52px; background:#5cb85c; flex-shrink:0;
+    display:flex; align-items:center; gap:10px; padding:0 14px;
+    color:#fff; font-size:17px; font-weight:600;
+    font-family:'Noto Serif TC', sans-serif;
+  }
+  .line-header .back{ font-size:24px; font-weight:400; }
+  .line-header .line-title{ flex:1; text-align:left; }
+  .line-header .menu{ font-size:18px; }
+  .line-body{
+    flex:1; overflow-y:auto;
+    background:#dfe2d6;
+    padding:14px 12px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .msg-row{
+    display:flex; align-items:flex-end; gap:8px;
+    opacity:0; transform:translateY(6px);
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .msg-row.show{ opacity:1; transform:translateY(0); }
+  /* 田帥（本人）的訊息整排靠右、頭像換到右邊，泡泡改用不同顏色來區分 */
+  .msg-row.me{ flex-direction:row-reverse; }
+  .msg-avatar{
+    flex-shrink:0;
+    width:36px; height:36px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:15px; font-weight:700;
+    font-family:'Noto Serif TC', sans-serif;
+    box-shadow:0 1px 2px rgba(0,0,0,0.15);
+  }
+  .msg-content{ display:flex; flex-direction:column; align-items:flex-start; gap:3px; max-width:72%; }
+  .msg-row.me .msg-content{ align-items:flex-end; }
+  .msg-name{ font-size:14px; font-weight:700; color:#4a4a4a; margin:0 2px; }
+  .msg-bubble{
+    background:#fff; color:#222; font-size:16px; line-height:1.5;
+    padding:9px 14px; border-radius:16px;
+    box-shadow:0 1px 1px rgba(0,0,0,0.08);
+  }
+  .msg-row:not(.me) .msg-bubble{ border-top-left-radius:4px; }
+  .msg-row.me .msg-bubble{ border-top-right-radius:4px; background:#7ac74f; color:#173617; }
+  .msg-sticker{ width:104px; height:104px; object-fit:contain; }
+
+  /* ---------- Progress track ---------- */
+  #progress-track{
+    position:fixed; top:0; left:0; right:0; height:3px;
+    background:rgba(230,180,195,0.25);
+    z-index:20;
+  }
+  #progress-fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--accent-gold), var(--accent-vivid));
+    transition:width 0.2s linear;
+  }
+  #progress-marker{
+    position:absolute; top:-3px; width:1px; height:9px;
+    background:var(--text-soft); opacity:0.6;
+  }
+
+  /* ---------- Bottom controls：自動播放時滑鼠不在範圍內就收合成一個點 ---------- */
+  #controls-zone{
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+    z-index:30;
+  }
+
+  #controls{
+    display:flex; align-items:center; gap:14px;
+    background:rgba(255,255,255,0.75);
+    backdrop-filter:blur(6px);
+    padding:10px 18px;
+    border-radius:999px;
+    border:1.5px solid var(--accent-vivid);
+    box-shadow:0 8px 24px rgba(217,79,120,0.2);
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  /* 自動播放模式下：滑鼠不在控制列範圍內（含小點）才收合，只要還在範圍內就一直顯示 */
+  #controls-zone.auto-hide:not(:hover) #controls{
+    opacity:0;
+    transform:translateY(10px) scale(0.9);
+    pointer-events:none;
+  }
+
+  #controls button{
+    font-family:'Noto Serif TC', serif;
+    font-size:14px;
+    font-weight:500;
+    color:var(--accent-vivid);
+    background:rgba(217,79,120,0.06);
+    border:1.5px solid var(--accent-vivid);
+    border-radius:999px;
+    padding:7px 14px;
+    cursor:pointer;
+    transition:all .2s ease;
+    white-space:nowrap;
+  }
+  #controls button:hover{
+    background:var(--accent-vivid);
+    color:#fff;
+  }
+  #controls button.off{
+    color:var(--text-soft);
+    border-color:rgba(169,134,141,0.5);
+    background:transparent;
+  }
+
+  #dots{ display:flex; gap:6px; align-items:center; margin:0 4px; }
+  #page-counter{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--accent-vivid);
+    letter-spacing:1px;
+    margin:0 6px;
+    padding:5px 14px;
+    border:1px solid rgba(217,79,120,0.4);
+    border-radius:999px;
+    background:rgba(217,79,120,0.1);
+    white-space:nowrap;
+    user-select:none;
+  }
+  .dot{
+    width:7px; height:7px; border-radius:50%;
+    background-color:rgba(217,79,120,0.3);
+    transition:all .2s ease;
+    cursor:pointer;
+    padding:5px;
+    background-clip:content-box;
+    box-sizing:content-box;
+  }
+  .dot:hover{ background-color:var(--accent-vivid); transform:scale(1.3); }
+  .dot.active{ background-color:var(--accent-vivid); transform:scale(1.4); }
+  .dot.c0{ opacity:0.5; }
+  .dot.c2{ border:1px solid var(--accent-gold); }
+
+  /* 起始頁／暫停畫面 1／暫停畫面 2：跟一般投影片的小點做出區別（方形＋外框），一樣可以點擊跳過去 */
+  .dot-special{
+    border-radius:2px;
+    background-color:rgba(169,134,141,0.35);
+    margin:0 1px;
+  }
+  .dot-special:hover{ background-color:var(--text-dark); }
+  .dot-special.active{ background-color:var(--text-dark); transform:scale(1.3); }
+  .dot-special.pause{ background-color:rgba(217,79,120,0.35); }
+  .dot-special.pause:hover, .dot-special.pause.active{ background-color:var(--accent-vivid); }
+
+  #controls-dot{
+    position:absolute; left:50%; top:50%;
+    width:14px; height:14px; border-radius:50%;
+    background:var(--accent-vivid);
+    box-shadow:0 0 0 6px rgba(217,79,120,0.18);
+    opacity:0;
+    transform:translate(-50%,-50%) scale(0.4);
+    transition:opacity .35s ease, transform .35s ease;
+    cursor:pointer;
+    pointer-events:none;
+  }
+  #controls-zone.auto-hide:not(:hover) #controls-dot{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+    pointer-events:auto;
+  }
+
+  /* ---------- Overlays (start / gate) ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    background:linear-gradient(160deg, rgba(255,250,249,0.93) 0%, rgba(255,238,243,0.93) 100%);
+    backdrop-filter:blur(2px);
+    z-index:50;
+    transition:opacity .8s ease, visibility .8s ease;
+  }
+  .overlay.hidden{
+    opacity:0; visibility:hidden; pointer-events:none;
+  }
+  #gate-overlay{ opacity:0; visibility:hidden; }
+  #gate-overlay.visible{ opacity:1; visibility:visible; }
+
+  /* ---------- 求婚頁：願意 / 不願意 ---------- */
+  #propose-overlay{ opacity:0; visibility:hidden; z-index:55; }
+  #propose-overlay.visible{ opacity:1; visibility:visible; }
+  #propose-safe-zone{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  #propose-title{
+    font-weight:500;
+    font-size:clamp(26px, 4.4vw, 46px);
+    letter-spacing:2px;
+    margin:0;
+    color:var(--text-dark);
+  }
+  #btn-propose-yes{
+    margin-top:34px;
+    font-family:'Noto Serif TC', serif;
+    font-size:20px;
+    letter-spacing:6px;
+    color:#fff;
+    background:var(--accent-vivid);
+    border:1px solid var(--accent-vivid);
+    padding:16px 52px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 14px 34px rgba(217,79,120,0.38);
+    transition:transform .3s ease, background .3s ease, box-shadow .3s ease;
+  }
+  #btn-propose-yes:hover{
+    background:#c73f68;
+    transform:scale(1.06);
+    box-shadow:0 16px 38px rgba(217,79,120,0.48);
+  }
+  #btn-propose-no{
+    margin-top:18px;
+    font-family:'Noto Serif TC', serif;
+    font-size:14px;
+    font-weight:500;
+    letter-spacing:2px;
+    color:var(--accent-vivid);
+    background:rgba(217,79,120,0.06);
+    border:1.5px solid var(--accent-vivid);
+    padding:7px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:left .28s ease, top .28s ease;
+  }
+  #btn-propose-no.dodged{
+    position:fixed;
+    margin:0;
+    z-index:60;
+  }
+
+  /* 第一段／第二段中間暫停時的備用小音樂播放器：右下角，只有停在提示畫面／求婚畫面時才會出現 */
+  #interlude-player{
+    position:fixed; right:26px; bottom:26px;
+    z-index:70;
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.92);
+    border:1px solid rgba(216,185,138,0.45);
+    border-radius:999px;
+    padding:9px 18px 9px 9px;
+    box-shadow:0 12px 32px rgba(180,120,140,0.22);
+    opacity:0; visibility:hidden;
+    transform:translateY(12px);
+    transition:opacity .5s ease, visibility .5s ease, transform .5s ease;
+    pointer-events:none;
+  }
+  #interlude-player.visible{
+    opacity:1; visibility:visible; transform:translateY(0);
+    pointer-events:auto;
+  }
+  #interlude-player button{
+    width:32px; height:32px; min-width:32px; border-radius:50%;
+    border:1.5px solid var(--accent-vivid);
+    background:rgba(217,79,120,0.06);
+    color:var(--accent-vivid);
+    font-size:13px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:all .2s ease;
+    padding:0;
+  }
+  #interlude-player button:hover{ background:var(--accent-vivid); color:#fff; }
+  #interlude-info{ display:flex; flex-direction:column; gap:3px; }
+  #interlude-title{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:12px;
+    color:var(--text-soft);
+    white-space:nowrap;
+  }
+  #interlude-seek{ width:120px; accent-color:var(--accent-vivid); cursor:pointer; }
+  #interlude-vol-icon{ font-size:13px; color:var(--text-soft); }
+  #interlude-volume{ width:56px; accent-color:var(--accent-vivid); cursor:pointer; }
+  @media (max-width:640px){
+    #interlude-seek{ width:70px; }
+    #interlude-volume{ width:40px; }
+  }
+
+  /* 起始頁在按下開始前必須完全不透光，避免第一張畫面透出來被劇透 */
+  #start-overlay{
+    background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    backdrop-filter:none;
+    padding:0 24px;
+  }
+
+  .overlay .deco-line{
+    width:60px; height:1px; background:var(--accent-gold); margin:18px 0;
+  }
+  .overlay h1{
+    font-weight:500;
+    font-size:clamp(24px, 4vw, 40px);
+    letter-spacing:2px;
+    margin:0;
+  }
+  .overlay p{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:clamp(15px, 2vw, 19px);
+    color:var(--text-soft);
+    margin:0;
+    max-width:520px;
+    line-height:1.8;
+  }
+  .overlay button{
+    margin-top:30px;
+    font-family:'Noto Serif TC', serif;
+    font-size:15px;
+    letter-spacing:3px;
+    color:#7a4652;
+    background:transparent;
+    border:1px solid var(--accent-gold);
+    padding:12px 34px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all .3s ease;
+  }
+  .overlay button:hover{
+    background:var(--accent-vivid);
+    border-color:var(--accent-vivid);
+    color:#fff;
+  }
+
+  /* 起始頁：文字和按鈕整體放大，避免版面太空 */
+  #start-overlay h1{
+    font-size:clamp(32px, 5.6vw, 58px);
+    line-height:1.5;
+    max-width:900px;
+  }
+  #start-overlay p{
+    font-size:clamp(19px, 2.8vw, 27px);
+    max-width:640px;
+  }
+  #start-overlay .deco-line{ width:84px; margin:28px 0; }
+  #start-overlay button{
+    font-size:20px;
+    letter-spacing:5px;
+    padding:18px 50px;
+  }
+
+  /* 標題裡的人名：故意做出不同的樣式 */
+  .name-highlight{
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-weight:600;
+    color:var(--accent-vivid);
+    font-size:1.15em;
+    position:relative;
+    padding:0 3px;
+    white-space:nowrap;
+  }
+  .name-highlight::after{
+    content:'';
+    position:absolute; left:2px; right:2px; bottom:-6px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  }
+
+  /* ---------- 邊框裝飾：右側「Our Story」緞帶 + 左下角小標籤，整場都在，讓畫面更豐富 ---------- */
+  #side-ribbon{
+    display:none; /* 已改用「畫面邊框.png」圖片邊框，避免跟新邊框的緞帶/標籤重複 */
+    position:fixed; top:50%; right:22px;
+    transform:translateY(-50%);
+    z-index:3; pointer-events:none;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic; font-weight:600;
+    font-size:19px; line-height:1.3;
+    color:var(--accent-pink-strong);
+    opacity:0.8;
+    writing-mode:vertical-rl;
+    letter-spacing:3px;
+  }
+  #side-ribbon .heart{ font-size:13px; writing-mode:horizontal-tb; color:var(--accent-gold); }
+
+  #corner-tag{
+    display:none; /* 已改用「畫面邊框.png」圖片邊框，避免跟新邊框的標籤重複 */
+    position:fixed; left:26px; bottom:26px;
+    z-index:3; pointer-events:none;
+    background:rgba(255,255,255,0.85);
+    border:1px dashed rgba(216,185,138,0.6);
+    border-radius:3px;
+    padding:8px 14px;
+    transform:rotate(-4deg);
+    box-shadow:0 8px 20px rgba(180,120,140,0.16);
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:13px;
+    line-height:1.5;
+    color:var(--text-soft);
+    text-align:center;
+    letter-spacing:0.5px;
+  }
+
+  @media (max-width:900px), (max-height:640px){
+    #side-ribbon, #corner-tag{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<audio id="audio" preload="auto"></audio>
+<audio id="prologue-audio" preload="auto" loop></audio>
+<audio id="interlude-audio" preload="auto"></audio>
+
+<!-- 背景裝飾：浮動愛心、星光、光斑，純 CSS，不需要額外圖檔 -->
+<div id="bg-decor">
+  <div class="bg-blob a"></div>
+  <div class="bg-blob b"></div>
+  <div class="bg-blob c"></div>
+
+  <span class="bg-heart" style="left:6%;  font-size:20px; animation-duration:15s; animation-delay:-2s;">❤</span>
+  <span class="bg-heart" style="left:16%; font-size:14px; animation-duration:12s; animation-delay:-7s;">❤</span>
+  <span class="bg-heart" style="left:28%; font-size:24px; animation-duration:18s; animation-delay:-4s;">❤</span>
+  <span class="bg-heart" style="left:42%; font-size:16px; animation-duration:14s; animation-delay:-10s;">❤</span>
+  <span class="bg-heart" style="left:58%; font-size:22px; animation-duration:16s; animation-delay:-1s;">❤</span>
+  <span class="bg-heart" style="left:72%; font-size:15px; animation-duration:13s; animation-delay:-9s;">❤</span>
+  <span class="bg-heart" style="left:84%; font-size:20px; animation-duration:17s; animation-delay:-5s;">❤</span>
+  <span class="bg-heart" style="left:92%; font-size:13px; animation-duration:11s; animation-delay:-3s;">❤</span>
+
+  <span class="bg-sparkle" style="left:12%; top:18%; animation-duration:3.2s; animation-delay:-0.5s;"></span>
+  <span class="bg-sparkle" style="left:22%; top:64%; animation-duration:4s;   animation-delay:-1.2s;"></span>
+  <span class="bg-sparkle" style="left:35%; top:30%; animation-duration:3.6s; animation-delay:-2s;"></span>
+  <span class="bg-sparkle" style="left:64%; top:20%; animation-duration:3.9s; animation-delay:-0.8s;"></span>
+  <span class="bg-sparkle" style="left:78%; top:70%; animation-duration:3.3s; animation-delay:-1.6s;"></span>
+  <span class="bg-sparkle" style="left:88%; top:35%; animation-duration:4.2s; animation-delay:-2.4s;"></span>
+  <span class="bg-sparkle" style="left:8%;  top:80%; animation-duration:3.7s; animation-delay:-1s;"></span>
+  <span class="bg-sparkle" style="left:53%; top:85%; animation-duration:3.4s; animation-delay:-0.3s;"></span>
+  <span class="bg-sparkle" style="left:46%; top:12%; animation-duration:3.5s; animation-delay:-1.8s;"></span>
+  <span class="bg-sparkle" style="left:95%; top:55%; animation-duration:4.1s; animation-delay:-0.6s;"></span>
+</div>
+
+<!-- 花邊框：細雙線外框 + 四角小花草 -->
+<div id="frame-border"></div>
+
+<!-- 整場都在的裝飾：右側直書小字 + 左下角小標籤，讓畫面感覺更豐富、不空洞 -->
+<div id="side-ribbon">Our Story <span class="heart">♡</span></div>
+<div id="corner-tag">Small Moments<br>Big Happiness</div>
+
+<div class="floral-corner tl">
+  <svg viewBox="0 0 120 120" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8,6 C40,10 52,34 60,68" style="fill:none;stroke:var(--accent-gold);stroke-width:1.6;stroke-linecap:round;opacity:0.55"/>
+    <ellipse cx="24" cy="17" rx="6" ry="3" style="fill:var(--accent-leaf);opacity:0.6" transform="rotate(-35 24 17)"/>
+    <ellipse cx="44" cy="44" rx="6.5" ry="3" style="fill:var(--accent-leaf);opacity:0.55" transform="rotate(25 44 44)"/>
+    <g style="opacity:0.85">
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(0 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(72 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(144 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(216 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(288 30 26)"/>
+      <circle cx="30" cy="26" r="1.6" style="fill:var(--accent-gold)"/>
+    </g>
+    <g style="opacity:0.92">
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(0 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(72 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(144 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(216 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(288 62 66)"/>
+      <circle cx="62" cy="66" r="3" style="fill:var(--accent-gold)"/>
+    </g>
+  </svg>
+</div>
+<div class="floral-corner tr">
+  <svg viewBox="0 0 120 120" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8,6 C40,10 52,34 60,68" style="fill:none;stroke:var(--accent-gold);stroke-width:1.6;stroke-linecap:round;opacity:0.55"/>
+    <ellipse cx="24" cy="17" rx="6" ry="3" style="fill:var(--accent-leaf);opacity:0.6" transform="rotate(-35 24 17)"/>
+    <ellipse cx="44" cy="44" rx="6.5" ry="3" style="fill:var(--accent-leaf);opacity:0.55" transform="rotate(25 44 44)"/>
+    <g style="opacity:0.85">
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(0 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(72 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(144 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(216 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(288 30 26)"/>
+      <circle cx="30" cy="26" r="1.6" style="fill:var(--accent-gold)"/>
+    </g>
+    <g style="opacity:0.92">
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(0 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(72 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(144 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(216 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(288 62 66)"/>
+      <circle cx="62" cy="66" r="3" style="fill:var(--accent-gold)"/>
+    </g>
+  </svg>
+</div>
+<div class="floral-corner bl">
+  <svg viewBox="0 0 120 120" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8,6 C40,10 52,34 60,68" style="fill:none;stroke:var(--accent-gold);stroke-width:1.6;stroke-linecap:round;opacity:0.55"/>
+    <ellipse cx="24" cy="17" rx="6" ry="3" style="fill:var(--accent-leaf);opacity:0.6" transform="rotate(-35 24 17)"/>
+    <ellipse cx="44" cy="44" rx="6.5" ry="3" style="fill:var(--accent-leaf);opacity:0.55" transform="rotate(25 44 44)"/>
+    <g style="opacity:0.85">
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(0 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(72 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(144 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(216 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(288 30 26)"/>
+      <circle cx="30" cy="26" r="1.6" style="fill:var(--accent-gold)"/>
+    </g>
+    <g style="opacity:0.92">
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(0 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(72 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(144 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(216 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(288 62 66)"/>
+      <circle cx="62" cy="66" r="3" style="fill:var(--accent-gold)"/>
+    </g>
+  </svg>
+</div>
+<div class="floral-corner br">
+  <svg viewBox="0 0 120 120" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8,6 C40,10 52,34 60,68" style="fill:none;stroke:var(--accent-gold);stroke-width:1.6;stroke-linecap:round;opacity:0.55"/>
+    <ellipse cx="24" cy="17" rx="6" ry="3" style="fill:var(--accent-leaf);opacity:0.6" transform="rotate(-35 24 17)"/>
+    <ellipse cx="44" cy="44" rx="6.5" ry="3" style="fill:var(--accent-leaf);opacity:0.55" transform="rotate(25 44 44)"/>
+    <g style="opacity:0.85">
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(0 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(72 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(144 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(216 30 26)"/>
+      <ellipse cx="30" cy="21" rx="2.5" ry="5" style="fill:var(--accent-pink)" transform="rotate(288 30 26)"/>
+      <circle cx="30" cy="26" r="1.6" style="fill:var(--accent-gold)"/>
+    </g>
+    <g style="opacity:0.92">
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(0 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(72 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(144 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(216 62 66)"/>
+      <ellipse cx="62" cy="57" rx="4.2" ry="9" style="fill:var(--accent-pink-strong)" transform="rotate(288 62 66)"/>
+      <circle cx="62" cy="66" r="3" style="fill:var(--accent-gold)"/>
+    </g>
+  </svg>
+</div>
+
+<div id="progress-track">
+  <div id="progress-fill"></div>
+  <div id="progress-marker"></div>
+</div>
+
+<div id="stage-wrap">
+  <div id="stage">
+    <div id="stage-content"></div>
+    <img id="stage-frame" src="畫面邊框.png" alt="">
+  </div>
+</div>
+
+<div id="controls-zone">
+  <div id="controls">
+    <button id="btn-prev" title="上一頁">‹ 上一頁</button>
+    <button id="btn-playpause" title="播放/暫停">⏸</button>
+    <button id="btn-auto-toggle" title="切換自動播放">自動播放：開</button>
+    <div id="dots"></div>
+    <span id="page-counter" title="目前頁碼／總頁數（僅供對照，畫面上不會顯示）"></span>
+    <button id="btn-next" title="下一頁">下一頁 ›</button>
+  </div>
+  <div id="controls-dot" title="顯示控制列"></div>
+</div>
+
+<div id="start-overlay" class="overlay">
+  <h1 id="start-title"></h1>
+  <div class="deco-line"></div>
+  <p id="start-subtitle"></p>
+  <button id="btn-start"></button>
+</div>
+
+<div id="gate-overlay" class="overlay">
+  <h1 id="gate-title"></h1>
+  <div class="deco-line"></div>
+  <p id="gate-subtitle"></p>
+  <button id="btn-gate-continue"></button>
+</div>
+
+<div id="propose-overlay" class="overlay">
+  <div id="propose-safe-zone">
+    <h1 id="propose-title"></h1>
+    <div class="deco-line"></div>
+    <button id="btn-propose-yes"></button>
+  </div>
+  <button id="btn-propose-no"></button>
+</div>
+
+<!-- 第一段／第二段中間暫停時（提示畫面＋求婚畫面）才會出現的備用小音樂播放器，放在右下角，避免現場太安靜 -->
+<div id="interlude-player">
+  <button id="interlude-playpause" title="播放/暫停">⏸</button>
+  <div id="interlude-info">
+    <div id="interlude-title">Beautiful In White</div>
+    <input id="interlude-seek" type="range" min="0" max="100" value="0" step="0.1" title="播放進度">
+  </div>
+  <span id="interlude-vol-icon">🔊</span>
+  <input id="interlude-volume" type="range" min="0" max="1" value="1" step="0.01" title="音量">
+</div>
+
+<script>
+/* =========================================================================
+   設定區 CONFIG —— 之後要調整內容、時間點、文字，都只需要改這裡即可
+
+   整體流程：
+   序章（有自己的背景音樂，6 頁，播完自動接續）→ 第一段（音樂 0:00 開始）
+   → 快到 chapter1EndSeconds 時淡出暫停、跳出提示 → 按繼續 → 第二段
+   ========================================================================= */
+const CONFIG = {
+  // 主題背景音樂（從第一段開始才會播放）
+  audioSrc: "背景音樂/Nothing Gonna Change My Love For You.mp3",
+
+  // 序章的背景音樂（怕太乾，當個氛圍用，不用整首播完也沒關係）；留空就是完全不播
+  prologueAudioSrc: "背景音樂/序章背景音樂.mp3",
+
+  // 序章音樂的音量，1 = 原始音量，之後如果覺得太大聲有壓迫感，可以調小一點（例如 0.4）
+  prologueVolume: 0.4,
+
+  // 第一段結束的時間點（秒，從進入第一段開始算）。到這裡音樂會淡出、暫停，顯示「開始第二段」的提示畫面
+  chapter1EndSeconds: 136, // 2:16
+
+  // 第一段／第二段中間暫停時（提示畫面＋求婚畫面）的備用小音樂，怕現場太安靜或有突發狀況時可以墊音樂用
+  interludeAudioSrc: "背景音樂/Shane Filan - Beautiful In White.mp3",
+  interludeVolume: 1,         // 預設音量，現場可以再用播放器上的音量滑桿調整
+  interludeAutoplayDelayMs: 2000, // 進到暫停畫面後，延遲幾毫秒才自動開始播放這首
+
+  // 淡出 / 淡入音樂所需秒數
+  fadeSeconds: 2.5,
+
+  // 圖片怎麼填滿中間的固定播放區：
+  // "cover"（填滿並裁切多餘部分，不變形，預設）／"contain"（完整顯示，可能留白邊）／"fill"（強制拉伸剛好貼合，可能變形）
+  mediaFit: "cover",
+
+  startTitleHtml: "這是一個關於我們的故事，獻給妳 <span class=\"name-highlight\">林綵淳</span>",
+  startSubtitle: "點擊下方，讓我們一起回到這一路走來的每個瞬間",
+  startButtonText: "開始",
+
+  gateTitle: "現在，深呼吸一下，讓我們歡迎最佳男主角",
+  gateSubtitle: "準備好了嗎，我們的故事還要繼續",
+  gateButtonText: "繼續",
+
+  proposeTitle: "林綵淳，你願意嫁給我嗎？",
+  proposeYesText: "願意",
+  proposeNoText: "不願意",
+
+  // ================= 序章：六頁，全部播完後會自動接續第一段並開始播放音樂 =================
+  prologue: {
+    slides: [
+      // 第一頁：文字逐行淡入
+      {
+        type: 'custom',
+        onEnter: (el, advance) => {
+          el.innerHTML = '';
+          const wrap = document.createElement('div');
+          wrap.className = 'prologue-lines';
+          el.appendChild(wrap);
+
+          const lines = ['27歲那年', '阿寶突然在肥宅群問到⋯'];
+          const lineGapMs = 2500; // 每行文字間隔幾毫秒出現
+          const timers = [];
+          lines.forEach((text, idx) => {
+            const p = document.createElement('div');
+            p.className = 'prologue-line';
+            p.textContent = text;
+            wrap.appendChild(p);
+            timers.push(managedSetTimeout(() => p.classList.add('show'), 500 + idx * lineGapMs));
+          });
+          // 全部文字出現後，停留一下再自動往下一頁
+          timers.push(managedSetTimeout(advance, 500 + lines.length * lineGapMs + 1800));
+          el._timers = timers;
+        },
+        onLeave: (el) => {
+          clearManagedTimers(el._timers);
+          el.innerHTML = '';
+        }
+      },
+
+      // 第二頁：LINE 群組聊天動畫（不做手機邊框，直接顯示螢幕畫面，可以做大一點）
+      {
+        type: 'custom',
+        onEnter: (el, advance) => {
+          el.innerHTML = '';
+          const screen = document.createElement('div');
+          screen.className = 'chat-screen';
+          screen.innerHTML =
+            '<div class="line-status"><span>9:41</span><span>●●●●  100%</span></div>' +
+            '<div class="line-header"><span class="back">‹</span><span class="line-title">中正肥宅群</span><span class="menu">⋮</span></div>' +
+            '<div class="line-body"></div>';
+          el.appendChild(screen);
+          const body = screen.querySelector('.line-body');
+
+          // 聊天內容：可以自由增減、修改，sticker 用貼圖檔案路徑（相對於這個 html 檔案）
+          // me:true 代表這則是「田帥（本人）」自己發的訊息，會靠右顯示
+          const messages = [
+            { from: '阿寶', text: '聽說你們想認識單身的女生' },
+            { from: '阿寶', text: '我這邊剛好有可以介紹' },
+            { from: '釋迦', text: '來' },
+            { from: '阿志', text: '好阿，都可以' },
+            { from: '田帥', sticker: '序章/驚訝貼圖.png', me: true },
+            { from: '阿寶', text: '我們可以先出去玩，拍一下你們這群低能現在長怎樣' },
+            { from: '阿寶', text: '記得穿帥一點' }
+          ];
+
+          // 每個人給一個顏色的圓形頭像，頭像文字用這裡指定的字，方便一眼看出是誰在講話
+          const avatarColors = { '阿寶': '#e79bab', '釋迦': '#d8b98a', '阿志': '#7ea3d9', '田帥': '#7ac74f' };
+          const avatarLetters = { '阿寶': '寶', '阿志': '志', '釋迦': '胖', '田帥': '帥' };
+          const avatarColor = (name) => avatarColors[name] || '#b39dab';
+          const avatarLetter = (name) => avatarLetters[name] || name.charAt(0);
+
+          const rows = messages.map((m) => {
+            const row = document.createElement('div');
+            row.className = 'msg-row' + (m.me ? ' me' : '');
+            const bodyHtml = m.sticker
+              ? '<img class="msg-sticker" src="' + m.sticker + '" alt="">'
+              : '<div class="msg-bubble">' + m.text + '</div>';
+            row.innerHTML =
+              '<div class="msg-avatar" style="background:' + avatarColor(m.from) + '">' + avatarLetter(m.from) + '</div>' +
+              '<div class="msg-content">' +
+                '<div class="msg-name">' + m.from + '</div>' +
+                bodyHtml +
+              '</div>';
+            body.appendChild(row);
+            return row;
+          });
+
+          const msgGapMs = 3500; // 每則訊息間隔幾毫秒出現
+          const timers = [];
+          rows.forEach((row, i) => {
+            timers.push(managedSetTimeout(() => {
+              row.classList.add('show');
+              body.scrollTop = body.scrollHeight;
+            }, 500 + i * msgGapMs));
+          });
+          timers.push(managedSetTimeout(advance, 500 + rows.length * msgGapMs + 2200));
+          el._timers = timers;
+        },
+        onLeave: (el) => {
+          clearManagedTimers(el._timers);
+          el.innerHTML = '';
+        }
+      },
+
+      // 第三頁：選手照 + 文字說明
+      {
+        type: 'custom',
+        onEnter: (el, advance) => {
+          el.innerHTML = '';
+          const wrap = document.createElement('div');
+          wrap.className = 'prologue-photo';
+          wrap.innerHTML =
+            '<img class="prologue-photo-img" src="序章/選手照.JPEG" alt="選手照">' +
+            '<div class="prologue-photo-caption">之後就誕生了這張選手照</div>';
+          el.appendChild(wrap);
+
+          const img = wrap.querySelector('.prologue-photo-img');
+          const caption = wrap.querySelector('.prologue-photo-caption');
+          whenImagesReady([img], () => scatterBlockDecor(wrap, [img, caption], 5));
+
+          const stayMs = 7000; // 這頁總共停留多久（毫秒），可自行調整
+          const timers = [];
+          timers.push(managedSetTimeout(() => img.classList.add('show'), 300));
+          timers.push(managedSetTimeout(() => caption.classList.add('show'), 700));
+          timers.push(managedSetTimeout(advance, stayMs));
+          el._timers = timers;
+        },
+        onLeave: (el) => {
+          clearManagedTimers(el._timers);
+          el.innerHTML = '';
+        }
+      },
+
+      // 第四頁：先顯示左圖 + 前半句文字，停頓，再顯示右圖 + 後半句文字，停頓後才往下一頁
+      {
+        type: 'custom',
+        onEnter: (el, advance) => {
+          el.innerHTML = '';
+          const wrap = document.createElement('div');
+          wrap.className = 'prologue-duo';
+          wrap.innerHTML =
+            '<div class="prologue-duo-images">' +
+              '<img class="prologue-duo-img left" src="序章/選中白衣選手.png" alt="選中白衣選手">' +
+              '<img class="prologue-duo-img right" src="序章/白衣選手也覺得女方可以.png" alt="白衣選手也覺得女方可以">' +
+            '</div>' +
+            '<div class="prologue-duo-caption"><span class="seg seg1"></span><span class="seg seg2"></span></div>';
+          el.appendChild(wrap);
+
+          const imgLeft = wrap.querySelector('.left');
+          const imgRight = wrap.querySelector('.right');
+          const seg1 = wrap.querySelector('.seg1');
+          const seg2 = wrap.querySelector('.seg2');
+          const duoCaption = wrap.querySelector('.prologue-duo-caption');
+          whenImagesReady([imgLeft, imgRight], () => scatterBlockDecor(wrap, [imgLeft, imgRight, duoCaption], 4));
+
+          const holdMs = 8000; // 每個階段停留幾毫秒，可自行調整
+          const timers = [];
+          timers.push(managedSetTimeout(() => {
+            imgLeft.classList.add('show');
+            seg1.textContent = '選中了白衣男子';
+          }, 400));
+          timers.push(managedSetTimeout(() => {
+            imgRight.classList.add('show');
+            seg2.textContent = '，男子也覺得女生可以';
+          }, 400 + holdMs));
+          timers.push(managedSetTimeout(advance, 400 + holdMs * 2));
+          el._timers = timers;
+        },
+        onLeave: (el) => {
+          clearManagedTimers(el._timers);
+          el.innerHTML = '';
+        }
+      },
+
+      // 第五頁：4 格漫畫。先單獨淡入文字說明，停留一下，再依左上→右上→左下→右下的順序，
+      // 每張圖片停留固定秒數後才淡入下一張，全部出完再停留一下才往下一頁
+      {
+        type: 'custom',
+        onEnter: (el, advance) => {
+          el.innerHTML = '';
+          const wrap = document.createElement('div');
+          wrap.className = 'prologue-comic';
+          wrap.innerHTML =
+            '<div class="prologue-comic-caption">在那之後的某一天，突然⋯</div>' +
+            '<div class="prologue-comic-grid">' +
+              '<img class="prologue-comic-img" src="序章/突然的邀約1.png" alt="">' +
+              '<img class="prologue-comic-img" src="序章/突然的邀約2.png" alt="">' +
+              '<img class="prologue-comic-img" src="序章/突然的邀約3.png" alt="">' +
+              '<img class="prologue-comic-img" src="序章/突然的邀約4.png" alt="">' +
+            '</div>';
+          el.appendChild(wrap);
+
+          const caption = wrap.querySelector('.prologue-comic-caption');
+          const panels = Array.from(wrap.querySelectorAll('.prologue-comic-img'));
+
+          const captionHoldMs = 4000; // 文字先單獨顯示幾毫秒，之後才開始出圖
+          const panelGapMs = 7000;    // 每張圖片停留幾毫秒，才出下一張
+          const timers = [];
+
+          timers.push(managedSetTimeout(() => caption.classList.add('show'), 300));
+          panels.forEach((img, i) => {
+            timers.push(managedSetTimeout(() => img.classList.add('show'), 300 + captionHoldMs + i * panelGapMs));
+          });
+          timers.push(managedSetTimeout(advance, 300 + captionHoldMs + panels.length * panelGapMs));
+          el._timers = timers;
+        },
+        onLeave: (el) => {
+          clearManagedTimers(el._timers);
+          el.innerHTML = '';
+        }
+      },
+
+      // 第六頁「於是…」：一進來就馬上淡出序章音樂，淡出完停 2 秒安靜，才接續第一段（音樂與畫面一起換）
+      {
+        type: 'html',
+        html: '<div class="prologue-placeholder">於是…</div>',
+        onEnter: (el, advance) => {
+          const silenceMs = 2000; // 音樂淡出後，安靜停留幾毫秒才接續第一段
+          fadeAudio(prologueAudio, 0, CONFIG.fadeSeconds, () => {
+            prologueAudio.pause();
+            el._timer = managedSetTimeout(advance, silenceMs);
+          });
+        },
+        onLeave: (el) => { clearManagedTimer(el._timer); }
+      }
+    ]
+  },
+
+  // ================= 第一段 / 第二段：跟音樂時間軸同步 =================
+  chapters: [
+    {
+      slides: [
+        // 第一張：照片 + 文字敘述 + 一行很小的備註
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/遇見彼此.png" alt="我們遇見了彼此">' +
+              '<div class="photo-block-caption">我們遇見了彼此</div>' +
+              '<div class="photo-block-note">＊當天其實還有其他人，但我只是想表達那個意境</div>' +
+            '</div>'
+        },
+        // 第二張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/互有好感相約.png" alt="得知彼此互有好感">' +
+              '<div class="photo-block-caption">得知彼此互有好感</div>' +
+            '</div>'
+        },
+        // 第三張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/鼓起勇氣約的第一次單獨約會在咖啡廳.png" alt="鼓起勇氣約的第一次約會">' +
+              '<div class="photo-block-caption">鼓起勇氣約的第一次約會，你卻緊張到拿switch出來玩</div>' +
+            '</div>'
+        },
+        // 第四張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/第一次約會晚上還續攤逛IKEA 當天還差點牽到手.png" alt="續攤IKEA">' +
+              '<div class="photo-block-caption">不捨得回家又續攤IKEA，當天走很近還差點牽到手</div>' +
+            '</div>'
+        },
+        // 第五張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/相約去吃藏壽司.JPEG" alt="相約去吃藏壽司">' +
+              '<div class="photo-block-caption">又再約出去吃妳最愛的壽司</div>' +
+            '</div>'
+        },
+        // 第六張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/決定告白.png" alt="決定告白">' +
+              '<div class="photo-block-caption">覺得時機成熟了，在文化中心散步的時候直接告白</div>' +
+            '</div>'
+        },
+        // 第七張（雙圖）
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/肉麻限動.PNG" alt="肉麻限動">' +
+                '<img class="photo-block-duo-img" src="第一段/肉麻限動2.PNG" alt="肉麻限動2">' +
+              '</div>' +
+              '<div class="photo-block-caption">在一起後發始發肉麻限動</div>' +
+            '</div>'
+        },
+        // 第八張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/同框不知道在彆扭什麼.JPEG" alt="同框不知道在彆扭什麼">' +
+              '<div class="photo-block-caption">別人幫忙拍就很彆扭</div>' +
+            '</div>'
+        },
+        // 第九張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/甜蜜認真合照.JPEG" alt="甜蜜認真合照">' +
+              '<div class="photo-block-caption">第一次認真甜蜜同框</div>' +
+            '</div>'
+        },
+        // 第十張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/生日送的對錶.JPEG" alt="生日送的對錶">' +
+              '<div class="photo-block-caption">第一次幫妳過生日，送的對錶</div>' +
+            '</div>'
+        },
+        // 第十一張（雙圖）
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/把我拍的很帥.JPEG" alt="把我拍的很帥">' +
+                '<img class="photo-block-duo-img" src="第一段/咖啡廳日常.JPEG" alt="咖啡廳日常">' +
+              '</div>' +
+              '<div class="photo-block-caption">把我拍的很帥，我也把你拍得很正</div>' +
+            '</div>'
+        },
+        // 第十二張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/玩累了靠著我睡著.JPEG" alt="玩累了靠著我睡著">' +
+              '<div class="photo-block-caption">玩累了靠著我睡著</div>' +
+            '</div>'
+        },
+        // 第十三張（雙圖）
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/熱血騎車載你衝恆春.JPEG" alt="熱血騎車載你衝恆春">' +
+                '<img class="photo-block-duo-img" src="第一段/海景再合照一張.JPEG" alt="海景再合照一張">' +
+              '</div>' +
+              '<div class="photo-block-caption">還熱血騎車載你衝墾丁</div>' +
+            '</div>'
+        },
+        // 第十四張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/為了能載妳出去玩 去考駕照.JPEG" alt="為了能載妳出去玩去考駕照">' +
+              '<div class="photo-block-caption">為了能開車載妳出去玩，馬上去考駕照，騎車太累</div>' +
+            '</div>'
+        },
+        // 第十五張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/疫情也硬要出去玩的兩個人.JPEG" alt="疫情也硬要出去玩的兩個人">' +
+              '<div class="photo-block-caption">疫情也硬要出去玩的兩個人</div>' +
+            '</div>'
+        },
+        // 第十六張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/照片開始崩壞.PNG" alt="照片開始崩壞">' +
+              '<div class="photo-block-caption">照片開始崩壞</div>' +
+            '</div>'
+        },
+        // 第十七張（雙圖）
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/崩壞照片2.JPEG" alt="崩壞照片2">' +
+                '<img class="photo-block-duo-img" src="第一段/崩壞照片3.JPEG" alt="崩壞照片3">' +
+              '</div>' +
+              '<div class="photo-block-caption">各種醜照</div>' +
+            '</div>'
+        },
+        // 第十八張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/神秘的頭.JPEG" alt="神秘的頭">' +
+              '<div class="photo-block-caption">神秘的頭</div>' +
+            '</div>'
+        },
+        // 第十九張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/詭異姿勢.JPEG" alt="詭異姿勢">' +
+              '<div class="photo-block-caption">詭異姿勢</div>' +
+            '</div>'
+        },
+        // 第二十張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/互比中指.JPEG" alt="互比中指">' +
+              '<div class="photo-block-caption">互比中指</div>' +
+            '</div>'
+        },
+        // 第二十一張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/好阿又睡.JPEG" alt="好阿又睡">' +
+              '<div class="photo-block-caption">好阿又睡</div>' +
+            '</div>'
+        },
+        // 第二十二張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/30歲生日驚喜箱.JPEG" alt="30歲生日驚喜箱">' +
+              '<div class="photo-block-caption">30歲生日驚喜箱</div>' +
+            '</div>'
+        },
+        // 第二十三張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/生日請我吃飯.JPEG" alt="生日請我吃飯">' +
+              '<div class="photo-block-caption">換我生日請我吃飯</div>' +
+            '</div>'
+        },
+        // 第二十四張（雙圖）
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/認真擺pose.JPEG" alt="認真擺POSE">' +
+                '<img class="photo-block-duo-img" src="第一段/蕭黃奇.JPEG" alt="蕭黃奇">' +
+              '</div>' +
+              '<div class="photo-block-caption">認真擺POSE和蕭黃奇</div>' +
+            '</div>'
+        },
+        // 第二十五張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/駁二日常.JPEG" alt="駁二日常">' +
+              '<div class="photo-block-caption">駁二日常</div>' +
+            '</div>'
+        },
+        // 第二十六張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第一段/澎湖的海邊.JPEG" alt="澎湖海邊">' +
+              '<div class="photo-block-caption">澎湖海邊</div>' +
+            '</div>'
+        },
+        // 第二十七張（雙圖）
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/好看照片.JPEG" alt="好看照片">' +
+                '<img class="photo-block-duo-img" src="第一段/我們之間有太多回憶.JPEG" alt="我們之間有太多回憶">' +
+              '</div>' +
+              '<div class="photo-block-caption">我們之間有太多回憶</div>' +
+            '</div>'
+        }
+      ]
+    },
+    {
+      slides: [
+        "第二段/123456.png",
+        "第二段/1625311926929.jpg",
+        "第二段/71f8640d-1496-4d8a-bc60-66a3b82879a7.jfif"
+      ]
+    }
+  ]
+};
+/* ========================================================================= */
+
+document.documentElement.style.setProperty('--media-fit', CONFIG.mediaFit);
+
+const audio = document.getElementById('audio');
+audio.src = CONFIG.audioSrc;
+
+const prologueAudio = document.getElementById('prologue-audio');
+if (CONFIG.prologueAudioSrc) prologueAudio.src = CONFIG.prologueAudioSrc;
+function playPrologueAudioIfAny() {
+  if (!CONFIG.prologueAudioSrc) return;
+  prologueAudio.currentTime = 0;
+  prologueAudio.volume = 0;
+  prologueAudio.play().catch(() => {});
+  fadeAudio(prologueAudio, CONFIG.prologueVolume, CONFIG.fadeSeconds);
+}
+function stopPrologueAudioIfAny() {
+  if (!CONFIG.prologueAudioSrc) return;
+  prologueAudio.pause();
+}
+
+const interludeAudio = document.getElementById('interlude-audio');
+if (CONFIG.interludeAudioSrc) interludeAudio.src = CONFIG.interludeAudioSrc;
+interludeAudio.volume = CONFIG.interludeVolume;
+
+const stageWrap = document.getElementById('stage-wrap');
+const stage = document.getElementById('stage');
+const stageContent = document.getElementById('stage-content');
+const dotsContainer = document.getElementById('dots');
+const pageCounterEl = document.getElementById('page-counter');
+pageCounterEl.textContent = '起始頁';
+const startOverlay = document.getElementById('start-overlay');
+const gateOverlay = document.getElementById('gate-overlay');
+const progressFill = document.getElementById('progress-fill');
+const progressMarker = document.getElementById('progress-marker');
+const controlsZone = document.getElementById('controls-zone');
+
+document.getElementById('start-title').innerHTML = CONFIG.startTitleHtml;
+document.getElementById('start-subtitle').textContent = CONFIG.startSubtitle;
+document.getElementById('btn-start').textContent = CONFIG.startButtonText;
+document.getElementById('gate-title').textContent = CONFIG.gateTitle;
+document.getElementById('gate-subtitle').textContent = CONFIG.gateSubtitle;
+document.getElementById('btn-gate-continue').textContent = CONFIG.gateButtonText;
+document.getElementById('propose-title').textContent = CONFIG.proposeTitle;
+document.getElementById('btn-propose-yes').textContent = CONFIG.proposeYesText;
+document.getElementById('btn-propose-no').textContent = CONFIG.proposeNoText;
+
+const btnStart = document.getElementById('btn-start');
+const btnGateContinue = document.getElementById('btn-gate-continue');
+const proposeOverlay = document.getElementById('propose-overlay');
+const btnProposeYes = document.getElementById('btn-propose-yes');
+const btnProposeNo = document.getElementById('btn-propose-no');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+const btnPlayPause = document.getElementById('btn-playpause');
+const btnAutoToggle = document.getElementById('btn-auto-toggle');
+
+const interludePlayer = document.getElementById('interlude-player');
+const btnInterludePlayPause = document.getElementById('interlude-playpause');
+const interludeSeek = document.getElementById('interlude-seek');
+const interludeVolume = document.getElementById('interlude-volume');
+interludeVolume.value = CONFIG.interludeVolume;
+
+let flatSlides = [];      // [{chapter, type, ..., el, dot}]  chapter: 0=序章 1=第一段 2=第二段
+let boundaries = [];      // 只有 chapter 1 / 2 有意義；序章的項目是佔位用的 {start:0,end:0}
+let audioDuration = null;
+let currentFlatIndex = 0;
+let autoMode = true;
+let gateActive = false;
+let started = false;
+let fading = false;
+let prologuePaused = false;
+
+// ---- 可被「暫停/繼續」控制的計時器：序章裡所有會自動往下走的動畫/倒數，都透過這一套來排程 ----
+// 這樣按下暫停時，不管是文字逐行淡入、聊天訊息，還是自動翻頁的倒數，全部都能真的凍結，恢復時接著剩下的時間繼續
+let activeManagedTimers = [];
+function managedSetTimeout(cb, delay) {
+  const rec = { cb, remaining: delay, startedAt: performance.now(), id: null };
+  rec.id = setTimeout(() => {
+    activeManagedTimers = activeManagedTimers.filter((r) => r !== rec);
+    cb();
+  }, delay);
+  activeManagedTimers.push(rec);
+  return rec;
+}
+function clearManagedTimer(rec) {
+  if (!rec) return;
+  clearTimeout(rec.id);
+  activeManagedTimers = activeManagedTimers.filter((r) => r !== rec);
+}
+function clearManagedTimers(recs) {
+  (recs || []).forEach(clearManagedTimer);
+}
+function pauseManagedTimers() {
+  const now = performance.now();
+  activeManagedTimers.forEach((rec) => {
+    clearTimeout(rec.id);
+    rec.remaining = Math.max(0, rec.remaining - (now - rec.startedAt));
+    rec.id = null;
+  });
+}
+function resumeManagedTimers() {
+  const now = performance.now();
+  activeManagedTimers.forEach((rec) => {
+    rec.startedAt = now;
+    rec.id = setTimeout(() => {
+      activeManagedTimers = activeManagedTimers.filter((r) => r !== rec);
+      rec.cb();
+    }, rec.remaining);
+  });
+}
+
+// ---- 把 CONFIG 內的設定，統一轉成內部格式 ----
+// 字串 → 當成圖片；序章裡沒有自訂 onEnter 的項目，會自動套用「顯示 duration 毫秒後就往下一頁」的預設行為
+function normalizeSlide(raw, chapterIndex) {
+  const s = (typeof raw === 'string') ? { type: 'image', src: raw } : Object.assign({ type: 'image' }, raw);
+  s.chapter = chapterIndex;
+  if (chapterIndex === 0 && typeof s.onEnter !== 'function') {
+    const dur = s.duration || 3200;
+    s.onEnter = (el, advance) => { s._timer = managedSetTimeout(advance, dur); };
+    s.onLeave = () => { clearManagedTimer(s._timer); };
+  }
+  return s;
+}
+
+CONFIG.prologue.slides.forEach((raw) => flatSlides.push(normalizeSlide(raw, 0)));
+CONFIG.chapters.forEach((ch, ci) => {
+  ch.slides.forEach((raw) => flatSlides.push(normalizeSlide(raw, ci + 1)));
+});
+
+// ---- 空白處隨機小裝飾：等圖片都讀取完，量出照片＋文字實際佔的範圍，再避開那塊範圍隨機灑一些愛心／小花 ----
+function whenImagesReady(imgs, cb) {
+  const list = imgs.filter(Boolean);
+  let remaining = list.length;
+  if (remaining === 0) { cb(); return; }
+  function done() { remaining--; if (remaining <= 0) cb(); }
+  list.forEach((img) => {
+    if (img.complete && img.naturalWidth > 0) done();
+    else {
+      img.addEventListener('load', done, { once: true });
+      img.addEventListener('error', done, { once: true });
+    }
+  });
+}
+
+const DECOR_GLYPHS = ['♡', '❀', '✦', '❁'];
+const DECOR_COLORS = ['var(--accent-pink-strong)', 'var(--accent-gold)', 'var(--accent-leaf)'];
+
+function scatterBlockDecor(blockEl, excludeEls, count) {
+  requestAnimationFrame(() => {
+    const blockRect = blockEl.getBoundingClientRect();
+    if (blockRect.width < 20 || blockRect.height < 20) return;
+    const pad = 0.035;
+    const exclusions = excludeEls.filter(Boolean).map((elx) => {
+      const r = elx.getBoundingClientRect();
+      return {
+        left: (r.left - blockRect.left) / blockRect.width - pad,
+        right: (r.right - blockRect.left) / blockRect.width + pad,
+        top: (r.top - blockRect.top) / blockRect.height - pad,
+        bottom: (r.bottom - blockRect.top) / blockRect.height + pad
+      };
+    });
+    function overlaps(x, y) {
+      return exclusions.some((e) => x > e.left && x < e.right && y > e.top && y < e.bottom);
+    }
+    blockEl.querySelectorAll('.block-decor').forEach((n) => n.remove());
+    const frag = document.createDocumentFragment();
+    let placed = 0, tries = 0;
+    while (placed < count && tries < 80) {
+      tries++;
+      const x = 0.04 + Math.random() * 0.92;
+      const y = 0.05 + Math.random() * 0.9;
+      if (overlaps(x, y)) continue;
+      const span = document.createElement('span');
+      span.className = 'block-decor';
+      span.textContent = DECOR_GLYPHS[Math.floor(Math.random() * DECOR_GLYPHS.length)];
+      span.style.left = (x * 100).toFixed(1) + '%';
+      span.style.top = (y * 100).toFixed(1) + '%';
+      span.style.fontSize = (16 + Math.random() * 20).toFixed(0) + 'px';
+      span.style.color = DECOR_COLORS[Math.floor(Math.random() * DECOR_COLORS.length)];
+      span.style.opacity = (0.32 + Math.random() * 0.34).toFixed(2);
+      span.style.transform = 'translate(-50%,-50%) rotate(' + (Math.random() * 50 - 25).toFixed(0) + 'deg)';
+      frag.appendChild(span);
+      placed++;
+    }
+    blockEl.appendChild(frag);
+  });
+}
+
+// ---- 依內容類型建立畫面元素：圖片／文字 HTML／自訂動畫容器，三種共用同一套播放邏輯 ----
+// 注意：一開始都不加 active，避免按下開始前，內容透過起始頁被看到（劇透）
+flatSlides.forEach((s, i) => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'slide' + (s.chapter >= 1 ? ' slide-chapter' : '');
+
+  if (s.type === 'image') {
+    const img = document.createElement('img');
+    img.className = 'slide-media';
+    img.src = s.src;
+    img.alt = '';
+    wrapper.appendChild(img);
+  } else if (s.type === 'html') {
+    const box = document.createElement('div');
+    box.className = 'slide-html';
+    box.innerHTML = s.html || '';
+    wrapper.appendChild(box);
+  } else if (s.type === 'custom') {
+    const box = document.createElement('div');
+    box.className = 'slide-custom';
+    wrapper.appendChild(box);
+    s.mountEl = box;
+  }
+
+  stageContent.appendChild(wrapper);
+  s.el = wrapper;
+
+  const dot = document.createElement('span');
+  dot.className = 'dot' + (s.chapter === 0 ? ' c0' : '') + (s.chapter === 2 ? ' c2' : '');
+  dot.title = '第 ' + (i + 1) + ' 頁 / 共 ' + flatSlides.length + ' 頁';
+  dot.addEventListener('click', () => jumpToDot(i));
+  dotsContainer.appendChild(dot);
+  s.dot = dot;
+});
+
+// 第一段／第二段的照片頁（.photo-block）都是一開始就建立好的，統一在這裡補上空白處裝飾
+document.querySelectorAll('.photo-block').forEach((block) => {
+  const imgs = Array.from(block.querySelectorAll('.photo-block-img, .photo-block-duo-img'));
+  const caption = block.querySelector('.photo-block-caption');
+  const note = block.querySelector('.photo-block-note');
+  whenImagesReady(imgs, () => {
+    scatterBlockDecor(block, imgs.concat([caption, note]), imgs.length > 1 ? 4 : 6);
+  });
+});
+
+// ---- 起始頁／暫停畫面 1（提示）／暫停畫面 2（求婚）也算控制列裡可以直接跳過去的「頁面」，各補一個小點 ----
+function makeSpecialDot(titleText, extraClass) {
+  const d = document.createElement('span');
+  d.className = 'dot dot-special ' + extraClass;
+  d.title = titleText;
+  return d;
+}
+const startDot = makeSpecialDot('起始頁', 'start');
+const pause1Dot = makeSpecialDot('暫停畫面 1（提示）', 'pause');
+const pause2Dot = makeSpecialDot('暫停畫面 2（求婚）', 'pause');
+
+dotsContainer.insertBefore(startDot, dotsContainer.firstChild);
+const firstCh2Dot = dotsContainer.querySelector('.dot.c2');
+if (firstCh2Dot) {
+  dotsContainer.insertBefore(pause1Dot, firstCh2Dot);
+  dotsContainer.insertBefore(pause2Dot, firstCh2Dot);
+} else {
+  dotsContainer.appendChild(pause1Dot);
+  dotsContainer.appendChild(pause2Dot);
+}
+
+function setSpecialDotActive(key) {
+  startDot.classList.toggle('active', key === 'start');
+  pause1Dot.classList.toggle('active', key === 'pause1');
+  pause2Dot.classList.toggle('active', key === 'pause2');
+}
+
+// 目前顯示中的一般投影片（如果有的話）也一併停掉，離開起始頁／暫停畫面時才不會有殘留的計時器/動畫繼續跑
+function deactivateCurrentSlide() {
+  const cur = flatSlides[currentFlatIndex];
+  if (cur && cur.el.classList.contains('active')) {
+    if (typeof cur.onLeave === 'function') cur.onLeave(cur.mountEl || cur.el);
+    cur.el.classList.remove('active');
+    cur.dot.classList.remove('active');
+  }
+}
+
+function jumpToStart() {
+  resetToStart();
+}
+
+function jumpToPause1() {
+  started = true;
+  deactivateCurrentSlide();
+  startOverlay.classList.add('hidden');
+  proposeOverlay.classList.remove('visible');
+  gateActive = true;
+  audio.pause();
+  stopPrologueAudioIfAny(); // 若序章音樂還在播，切過來時要一併停掉，避免跟備用音樂重疊
+  gateOverlay.classList.add('visible');
+  showInterludePlayer();
+  stageWrap.classList.add('dimmed');
+  pageCounterEl.textContent = '暫停畫面・提示';
+  setSpecialDotActive('pause1');
+}
+
+function jumpToPause2() {
+  started = true;
+  deactivateCurrentSlide();
+  startOverlay.classList.add('hidden');
+  gateActive = true;
+  audio.pause();
+  stopPrologueAudioIfAny(); // 若序章音樂還在播，切過來時要一併停掉，避免跟備用音樂重疊
+  gateOverlay.classList.remove('visible');
+  resetProposeNoButton();
+  proposeOverlay.classList.add('visible');
+  showInterludePlayer();
+  stageWrap.classList.add('dimmed');
+  pageCounterEl.textContent = '暫停畫面・求婚';
+  setSpecialDotActive('pause2');
+}
+
+startDot.addEventListener('click', jumpToStart);
+pause1Dot.addEventListener('click', jumpToPause1);
+pause2Dot.addEventListener('click', jumpToPause2);
+setSpecialDotActive('start'); // 一開始就停在起始頁
+
+// ---- 計算第一段 / 第二段在音樂時間軸上的區間（序章不使用音樂時間軸，放佔位值）----
+function computeBoundaries() {
+  boundaries = new Array(flatSlides.length);
+
+  const prologueCount = CONFIG.prologue.slides.length;
+  for (let i = 0; i < prologueCount; i++) boundaries[i] = { start: 0, end: 0 };
+
+  const ch1Count = CONFIG.chapters[0].slides.length;
+  const ch1End = CONFIG.chapter1EndSeconds;
+  const ch1SlideDur = ch1End / ch1Count;
+  for (let i = 0; i < ch1Count; i++) {
+    boundaries[prologueCount + i] = { start: i * ch1SlideDur, end: (i + 1) * ch1SlideDur };
+  }
+
+  const ch2Count = CONFIG.chapters[1].slides.length;
+  const totalDur = audioDuration || (ch1End + ch2Count * 20); // 音樂長度未知前的暫時估計
+  const ch2Span = Math.max(totalDur - ch1End, ch2Count);
+  const ch2SlideDur = ch2Span / ch2Count;
+  for (let i = 0; i < ch2Count; i++) {
+    boundaries[prologueCount + ch1Count + i] = { start: ch1End + i * ch2SlideDur, end: ch1End + (i + 1) * ch2SlideDur };
+  }
+
+  if (audioDuration) {
+    progressMarker.style.left = (ch1End / audioDuration * 100) + '%';
+  }
+}
+computeBoundaries();
+
+audio.addEventListener('loadedmetadata', () => {
+  if (isFinite(audio.duration) && audio.duration > 0) {
+    audioDuration = audio.duration;
+    computeBoundaries();
+  }
+});
+
+function showSlide(flatIndex) {
+  flatSlides.forEach((s, i) => {
+    const wasActive = s.el.classList.contains('active');
+    const willActive = i === flatIndex;
+    if (willActive && !wasActive && typeof s.onEnter === 'function') {
+      s.onEnter(s.mountEl || s.el, () => onPrologueSlideAdvance(i));
+    }
+    if (!willActive && wasActive && typeof s.onLeave === 'function') s.onLeave(s.mountEl || s.el);
+    s.el.classList.toggle('active', willActive);
+    s.dot.classList.toggle('active', willActive);
+  });
+  currentFlatIndex = flatIndex;
+  if (pageCounterEl) pageCounterEl.textContent = (flatIndex + 1) + ' / ' + flatSlides.length;
+  setSpecialDotActive(null); // 只要正常顯示到某一張投影片，起始頁／暫停畫面的小點就不算目前所在頁
+
+  // 每次換到新的一頁，都當作全新開始（未暫停），避免暫停狀態被帶到下一頁
+  if (flatSlides[flatIndex].chapter === 0) {
+    prologuePaused = false;
+    btnPlayPause.textContent = '⏸';
+  }
+}
+
+// 序章的投影片播完後會呼叫這個 callback；只有在還停在同一張、還是自動播放模式時才會真的往下走
+function onPrologueSlideAdvance(i) {
+  if (i !== currentFlatIndex) return;
+  if (flatSlides[i].chapter !== 0) return;
+  if (!autoMode) return;
+  goTo(currentFlatIndex + 1);
+}
+
+// el：要淡入/淡出的 audio 元素（主音樂或序章音樂都可以用同一個函式）
+function fadeAudio(el, to, duration, cb) {
+  const isMain = (el === audio);
+  if (isMain) fading = true;
+  const from = el.volume;
+  const startT = performance.now();
+  function step(now) {
+    const p = Math.min(1, (now - startT) / (duration * 1000));
+    el.volume = Math.max(0, Math.min(1, from + (to - from) * p));
+    if (p < 1) {
+      requestAnimationFrame(step);
+    } else {
+      if (isMain) fading = false;
+      if (cb) cb();
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+// ---- 中間暫停畫面的備用小音樂播放器：提示畫面＋求婚畫面這兩頁才會出現 ----
+let interludeAutoplayTimer = null;
+
+function clearInterludeAutoplayTimer() {
+  if (interludeAutoplayTimer) {
+    clearTimeout(interludeAutoplayTimer);
+    interludeAutoplayTimer = null;
+  }
+}
+
+function showInterludePlayer() {
+  if (!CONFIG.interludeAudioSrc) return;
+  interludePlayer.classList.add('visible');
+  clearInterludeAutoplayTimer();
+  interludeAutoplayTimer = setTimeout(() => {
+    interludeAudio.play().catch(() => {});
+  }, CONFIG.interludeAutoplayDelayMs);
+}
+
+function hideInterludePlayer() {
+  clearInterludeAutoplayTimer();
+  interludePlayer.classList.remove('visible');
+  if (!interludeAudio.paused) fadeAudio(interludeAudio, 0, 1.2, () => interludeAudio.pause());
+}
+
+function openGate() {
+  gateActive = true;
+  audio.pause();
+  gateOverlay.classList.add('visible');
+  showInterludePlayer();
+  stageWrap.classList.add('dimmed'); // 跟起始頁→序章第一頁一樣的淡出手法，把底下的照片／邊框整個藏起來
+  pageCounterEl.textContent = '暫停畫面・提示';
+  setSpecialDotActive('pause1');
+}
+
+// 按下「繼續」後，先不直接進第二段，而是跳出「求婚」畫面
+function openPropose() {
+  gateOverlay.classList.remove('visible');
+  resetProposeNoButton();
+  proposeOverlay.classList.add('visible');
+  pageCounterEl.textContent = '暫停畫面・求婚';
+  setSpecialDotActive('pause2');
+  // 播放器維持顯示，提示畫面／求婚畫面共用同一個播放器跟音樂進度
+}
+
+function closeGateAndContinue() {
+  gateActive = false;
+  proposeOverlay.classList.remove('visible');
+  hideInterludePlayer();
+
+  // 布幕（stage-wrap 的 dimmed）還蓋著的時候，把目前殘留的投影片（通常是第一段最後一張）「瞬間」收掉、不要動畫，
+  // 這樣等一下布幕掀開時，底下就已經是第二段第一張準備要淡入了，不會先閃到第一段的照片
+  // 不論它目前是不是還有 .active（有些跳頁路徑會提早移除），一律強制瞬間藏起來，確保萬無一失
+  flatSlides.forEach((s) => {
+    if (s.chapter === 2) return; // 等一下要顯示的第二段第一張，不要動它
+    const isVisible = s.el.classList.contains('active') || parseFloat(getComputedStyle(s.el).opacity) > 0;
+    if (!isVisible) return;
+    s.el.style.transition = 'none';
+    s.el.classList.remove('active');
+    s.el.style.opacity = '0';
+    void s.el.offsetWidth; // 強制 reflow，讓上面兩行立即生效、不要有轉場
+    s.el.style.transition = '';
+    s.el.style.opacity = '';
+  });
+
+  audio.volume = 0;
+  audio.currentTime = CONFIG.chapter1EndSeconds;
+  audio.play();
+  fadeAudio(audio, 1, CONFIG.fadeSeconds);
+  btnPlayPause.textContent = '⏸';
+  const idx = flatSlides.findIndex(s => s.chapter === 2);
+  showSlide(idx); // 第二段第一張在布幕掀開「之前」就先設成 active，開始它自己的淡入
+  stageWrap.classList.remove('dimmed'); // 布幕掀開時，底下已經是第二段第一張在淡入，不會看到第一段殘影
+}
+
+// 「不願意」按鈕：把它放回一開始緊貼在「願意」下方的位置
+function resetProposeNoButton() {
+  btnProposeNo.classList.remove('dodged');
+  btnProposeNo.style.left = '';
+  btnProposeNo.style.top = '';
+}
+
+// 「不願意」按鈕滑開到畫面上的隨機位置，並避開標題／願意按鈕那一塊
+function dodgeProposeNoButton() {
+  const margin = 24; // 離視窗邊緣至少留這麼多 px，避免被切到
+  const pad = 26;     // 跟安全區塊之間再多留一點距離
+  const btnW = btnProposeNo.offsetWidth || 90;
+  const btnH = btnProposeNo.offsetHeight || 36;
+
+  const zones = [document.getElementById('propose-safe-zone').getBoundingClientRect()];
+  if (interludePlayer.classList.contains('visible')) {
+    zones.push(interludePlayer.getBoundingClientRect());
+  }
+  const exclusions = zones.map((r) => ({
+    left: r.left - pad, right: r.right + pad, top: r.top - pad, bottom: r.bottom + pad
+  }));
+
+  const maxX = Math.max(margin, window.innerWidth - btnW - margin);
+  const maxY = Math.max(margin, window.innerHeight - btnH - margin);
+
+  let x, y, tries = 0;
+  do {
+    x = margin + Math.random() * (maxX - margin);
+    y = margin + Math.random() * (maxY - margin);
+    tries++;
+  } while (
+    exclusions.some((e) => x < e.right && x + btnW > e.left && y < e.bottom && y + btnH > e.top) &&
+    tries < 40
+  );
+
+  btnProposeNo.classList.add('dodged');
+  btnProposeNo.style.left = x + 'px';
+  btnProposeNo.style.top = y + 'px';
+}
+
+// 序章播完，自動接續第一段：音樂從頭開始播放
+function enterChapter1() {
+  stopPrologueAudioIfAny();
+  const idx = flatSlides.findIndex(s => s.chapter === 1);
+  audio.currentTime = 0;
+  audio.volume = 1;
+  audio.play();
+  btnPlayPause.textContent = '⏸';
+  showSlide(idx);
+}
+
+// ---- 依音樂時間自動同步 / 自動翻頁（只在第一段 / 第二段生效，序章不使用音樂時間軸）----
+audio.addEventListener('timeupdate', () => {
+  if (!started || gateActive) return;
+  const cur = flatSlides[currentFlatIndex];
+  if (!cur || cur.chapter === 0) return;
+
+  const t = audio.currentTime;
+  const ch1End = CONFIG.chapter1EndSeconds;
+
+  progressFill.style.width = (t / (audioDuration || ch1End + 60) * 100) + '%';
+
+  // 第一段快結束：淡出音樂
+  if (cur.chapter === 1 && t >= ch1End - CONFIG.fadeSeconds && t < ch1End && !fading) {
+    fadeAudio(audio, 0, CONFIG.fadeSeconds);
+  }
+
+  // 第一段結束：暫停並顯示提示畫面
+  if (cur.chapter === 1 && t >= ch1End) {
+    audio.currentTime = ch1End;
+    openGate();
+    return;
+  }
+
+  if (!autoMode) return;
+
+  for (let i = 0; i < boundaries.length; i++) {
+    if (flatSlides[i].chapter === 0) continue; // 跳過序章的佔位區間
+    if (t >= boundaries[i].start && t < boundaries[i].end) {
+      if (i !== currentFlatIndex) showSlide(i);
+      break;
+    }
+    if (i === boundaries.length - 1 && t >= boundaries[i].end) {
+      if (currentFlatIndex !== i) showSlide(i);
+    }
+  }
+});
+
+// ---- 手動翻頁 ----
+function goTo(flatIndex) {
+  if (flatIndex < 0 || flatIndex >= flatSlides.length) return;
+  const targetChapter = flatSlides[flatIndex].chapter;
+  const curChapter = flatSlides[currentFlatIndex].chapter;
+
+  // 進入／停留在序章：不使用音樂時間軸
+  if (targetChapter === 0) {
+    if (curChapter !== 0) audio.pause();
+    if (curChapter !== 0) playPrologueAudioIfAny();
+    showSlide(flatIndex);
+    return;
+  }
+
+  // 序章播完，自動（或手動按下一頁）接續第一段：開始播放音樂，不需要提示畫面
+  if (curChapter === 0 && targetChapter === 1) {
+    enterChapter1();
+    return;
+  }
+
+  // 第一段最後一張要切到第二段：一律先跳出提示畫面
+  if (curChapter === 1 && targetChapter === 2) {
+    openGate();
+    return;
+  }
+
+  const b = boundaries[flatIndex];
+  audio.currentTime = b.start + 0.05;
+  showSlide(flatIndex);
+}
+
+// ---- 點控制列上的小點：直接跳到那一頁（不管上下頁順序，也不會被閘門／求婚畫面擋住，方便快速找頁面）----
+function jumpToDot(flatIndex) {
+  const leavingSpecial = !started || gateActive;
+  if (!leavingSpecial && flatIndex === currentFlatIndex) return;
+
+  if (leavingSpecial) {
+    // 從起始頁／暫停畫面 1／暫停畫面 2 跳過來：先把那些畫面收乾淨
+    started = true;
+    gateActive = false;
+    startOverlay.classList.add('hidden');
+    gateOverlay.classList.remove('visible');
+    proposeOverlay.classList.remove('visible');
+    hideInterludePlayer();
+    stageWrap.classList.remove('dimmed');
+  }
+
+  const targetChapter = flatSlides[flatIndex].chapter;
+  const curChapter = leavingSpecial ? -1 : flatSlides[currentFlatIndex].chapter;
+
+  if (targetChapter === 0) {
+    if (curChapter !== 0) {
+      audio.pause();
+      playPrologueAudioIfAny();
+    }
+    showSlide(flatIndex);
+    return;
+  }
+
+  if (curChapter === 0) stopPrologueAudioIfAny();
+  const b = boundaries[flatIndex];
+  audio.volume = 1;
+  audio.currentTime = b.start + 0.05;
+  if (audio.paused) audio.play();
+  btnPlayPause.textContent = '⏸';
+  showSlide(flatIndex);
+}
+
+// ---- 回到最一開始、還沒播放的起始狀態 ----
+function resetToStart() {
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = 1;
+  stopPrologueAudioIfAny();
+  hideInterludePlayer();
+  gateOverlay.classList.remove('visible');
+  proposeOverlay.classList.remove('visible');
+  stageWrap.classList.remove('dimmed');
+  fading = false;
+  started = false;
+  gateActive = false;
+
+  autoMode = true;
+  btnAutoToggle.textContent = '自動播放：開';
+  btnAutoToggle.classList.remove('off');
+  btnPlayPause.textContent = '⏸';
+  progressFill.style.width = '0%';
+
+  flatSlides.forEach((s) => {
+    if (s.el.classList.contains('active') && typeof s.onLeave === 'function') s.onLeave(s.mountEl || s.el);
+    s.el.classList.remove('active');
+    s.dot.classList.remove('active');
+  });
+  currentFlatIndex = 0;
+  setSpecialDotActive('start');
+  if (pageCounterEl) pageCounterEl.textContent = '起始頁';
+
+  controlsZone.classList.remove('auto-hide');
+
+  startOverlay.classList.remove('hidden');
+}
+
+btnNext.addEventListener('click', () => {
+  if (!started || gateActive) return;
+  goTo(currentFlatIndex + 1);
+});
+btnPrev.addEventListener('click', () => {
+  if (!started || gateActive) return;
+  if (currentFlatIndex === 0) {
+    resetToStart();
+    return;
+  }
+  goTo(currentFlatIndex - 1);
+});
+
+btnPlayPause.addEventListener('click', () => {
+  if (!started) return;
+
+  // 序章：暫停/繼續 音樂 + 目前這一頁的動畫或倒數計時，效果要跟後面第一段/第二段一致
+  if (flatSlides[currentFlatIndex].chapter === 0) {
+    if (!prologuePaused) {
+      prologuePaused = true;
+      if (CONFIG.prologueAudioSrc) prologueAudio.pause();
+      pauseManagedTimers();
+      btnPlayPause.textContent = '▶';
+    } else {
+      prologuePaused = false;
+      if (CONFIG.prologueAudioSrc) prologueAudio.play();
+      resumeManagedTimers();
+      btnPlayPause.textContent = '⏸';
+    }
+    return;
+  }
+
+  if (audio.paused) {
+    audio.play();
+    btnPlayPause.textContent = '⏸';
+  } else {
+    audio.pause();
+    btnPlayPause.textContent = '▶';
+  }
+});
+
+btnAutoToggle.addEventListener('click', () => {
+  autoMode = !autoMode;
+  btnAutoToggle.textContent = autoMode ? '自動播放：開' : '自動播放：關';
+  btnAutoToggle.classList.toggle('off', !autoMode);
+  updateAutoHideClass();
+});
+
+btnStart.addEventListener('click', () => {
+  started = true;
+  startOverlay.classList.add('hidden');
+  showSlide(0);           // 從序章第一頁開始，這時完全不動音樂
+  playPrologueAudioIfAny();
+  updateAutoHideClass();
+});
+
+btnGateContinue.addEventListener('click', openPropose);
+
+btnProposeYes.addEventListener('click', closeGateAndContinue);
+
+// 「不願意」：滑鼠一靠近／點下去都只會讓它閃到別的地方，不會有任何反應
+btnProposeNo.addEventListener('mouseenter', dodgeProposeNoButton);
+btnProposeNo.addEventListener('click', (e) => {
+  e.preventDefault();
+  dodgeProposeNoButton();
+});
+btnProposeNo.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  dodgeProposeNoButton();
+}, { passive: false });
+
+// ---- 中間暫停畫面的備用小音樂播放器：播放/暫停、拖曳進度、調音量 ----
+let interludeSeeking = false;
+
+btnInterludePlayPause.addEventListener('click', () => {
+  if (interludeAudio.paused) interludeAudio.play().catch(() => {});
+  else interludeAudio.pause();
+});
+interludeAudio.addEventListener('play', () => { btnInterludePlayPause.textContent = '⏸'; });
+interludeAudio.addEventListener('pause', () => { btnInterludePlayPause.textContent = '▶'; });
+interludeAudio.addEventListener('timeupdate', () => {
+  if (interludeSeeking || !interludeAudio.duration) return;
+  interludeSeek.value = (interludeAudio.currentTime / interludeAudio.duration) * 100;
+});
+interludeSeek.addEventListener('input', () => {
+  interludeSeeking = true;
+  if (interludeAudio.duration) {
+    interludeAudio.currentTime = (interludeSeek.value / 100) * interludeAudio.duration;
+  }
+});
+interludeSeek.addEventListener('change', () => { interludeSeeking = false; });
+interludeVolume.addEventListener('input', () => {
+  interludeAudio.volume = parseFloat(interludeVolume.value);
+});
+
+// ---- 控制列：自動播放時，滑鼠只要還在控制列（或收合後的小點）範圍內就一直顯示，移出範圍才收合 ----
+// 純靠 CSS :hover 判斷，不用計時器，所以按按鈕本身不會影響顯示/隱藏
+function updateAutoHideClass() {
+  controlsZone.classList.toggle('auto-hide', autoMode);
+}
+
+// ---- 鍵盤操作（可選）：左右鍵翻頁、空白鍵播放/暫停 ----
+document.addEventListener('keydown', (e) => {
+  if (!started) return;
+  if (e.code === 'ArrowRight') btnNext.click();
+  if (e.code === 'ArrowLeft') btnPrev.click();
+  if (e.code === 'Space') { e.preventDefault(); btnPlayPause.click(); }
+});
+</script>
+</body>
+</html>
