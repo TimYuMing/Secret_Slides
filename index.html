@@ -280,6 +280,131 @@
     line-height:1;
   }
 
+  /* ---- 第二段的最後一頁：整場的結尾畫面 ---- */
+  .finale-block{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px;
+    width:100%; height:100%;
+    text-align:center;
+  }
+  .finale-motif{
+    font-size:clamp(16px, 1.6vw, 20px);
+    color:var(--accent-vivid);
+    opacity:0;
+    animation:finaleFadeUp 1.1s ease .1s both;
+  }
+  .finale-deco-line{
+    width:56px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+    opacity:0;
+    animation:finaleFadeUp 1.1s ease .3s both;
+  }
+  .finale-gif{
+    max-width:46%;
+    max-height:52%;
+    object-fit:contain;
+    border-radius:3px;
+    background:#fff;
+    border:10px solid #fff;
+    border-bottom-width:26px;
+    box-shadow:0 18px 44px rgba(180,120,140,0.3), 0 4px 12px rgba(180,120,140,0.16);
+    opacity:0;
+    animation:finaleFadeUp 1.3s ease .55s both;
+  }
+  .finale-text{
+    font-family:'Noto Serif TC', serif;
+    font-weight:500;
+    font-size:clamp(25px, 3.4vw, 42px);
+    color:var(--text-dark);
+    letter-spacing:1.5px;
+    opacity:0;
+    animation:finaleFadeUp 1.3s ease 1.25s both;
+  }
+  .finale-signature{
+    position:absolute;
+    right:20.5%;
+    bottom:-4%;
+    text-align:right;
+    line-height:1.6;
+    padding:10px 20px;
+    background:rgba(255,255,255,0.82);
+    border:1px solid rgba(216,185,138,0.4);
+    border-radius:14px;
+    box-shadow:0 10px 26px rgba(180,120,140,0.16);
+    opacity:0;
+    animation:finaleFadeUp 1.3s ease 1.85s both;
+  }
+  .finale-sign-lead{
+    display:block;
+    font-family:'Noto Serif TC', serif;
+    font-size:clamp(12px, 1.1vw, 15px);
+    color:var(--text-soft);
+    letter-spacing:2px;
+  }
+  .finale-sign-names{
+    display:inline-block;
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:clamp(19px, 2.1vw, 27px);
+    color:var(--accent-vivid);
+    letter-spacing:0.5px;
+    position:relative;
+    padding-top:3px;
+  }
+  .finale-sign-names::after{
+    content:'';
+    position:absolute; left:0; right:0; bottom:-5px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  }
+  @keyframes finaleFadeUp{
+    from{ opacity:0; transform:translateY(14px) scale(0.97); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  /* ---- 整場真正的最後一頁：謝謝收看（影片＋專屬背景音樂，無限循環） ---- */
+  .thanks-block{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:24px;
+    width:100%; height:100%;
+    text-align:center;
+  }
+  .thanks-motif{
+    font-size:clamp(16px, 1.6vw, 20px);
+    color:var(--accent-vivid);
+    opacity:0;
+    animation:finaleFadeUp 1.1s ease .1s both;
+  }
+  .thanks-deco-line{
+    width:56px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+    opacity:0;
+    animation:finaleFadeUp 1.1s ease .3s both;
+  }
+  .thanks-video{
+    max-width:62%;
+    max-height:70%;
+    object-fit:cover;
+    border-radius:3px;
+    background:#fff;
+    border:10px solid #fff;
+    border-bottom-width:26px;
+    box-shadow:0 18px 44px rgba(180,120,140,0.3), 0 4px 12px rgba(180,120,140,0.16);
+    opacity:0;
+    animation:finaleFadeUp 1.3s ease .55s both;
+  }
+  .thanks-text{
+    font-family:'Noto Serif TC', serif;
+    font-weight:500;
+    font-size:clamp(26px, 3.6vw, 46px);
+    color:var(--text-dark);
+    letter-spacing:2px;
+    opacity:0;
+    animation:finaleFadeUp 1.3s ease 1.25s both;
+  }
+
   /* ---- 序章：照片 + 文字說明頁 ---- */
   .prologue-photo{
     position:relative;
@@ -814,6 +939,7 @@
 <audio id="audio" preload="auto"></audio>
 <audio id="prologue-audio" preload="auto" loop></audio>
 <audio id="interlude-audio" preload="auto"></audio>
+<audio id="ending-audio" preload="auto" loop></audio>
 
 <!-- 背景裝飾：浮動愛心、星光、光斑，純 CSS，不需要額外圖檔 -->
 <div id="bg-decor">
@@ -1025,6 +1151,10 @@ const CONFIG = {
   interludeAudioSrc: "背景音樂/Shane Filan - Beautiful In White.mp3",
   interludeVolume: 1,         // 預設音量，現場可以再用播放器上的音量滑桿調整
   interludeAutoplayDelayMs: 2000, // 進到暫停畫面後，延遲幾毫秒才自動開始播放這首
+
+  // 整場最後一頁（謝謝收看）專用的背景音樂，進到這頁就會無限循環播放
+  endingAudioSrc: "背景音樂/天真的橡皮 (DJ林澤版).mp3",
+  endingVolume: 1,
 
   // 淡出 / 淡入音樂所需秒數
   fadeSeconds: 2.5,
@@ -1538,7 +1668,48 @@ const CONFIG = {
       slides: [
         "第二段/123456.png",
         "第二段/1625311926929.jpg",
-        "第二段/71f8640d-1496-4d8a-bc60-66a3b82879a7.jfif"
+        "第二段/71f8640d-1496-4d8a-bc60-66a3b82879a7.jfif",
+        // 整場的最後一頁：結尾畫面
+        {
+          type: 'html',
+          html:
+            '<div class="finale-block">' +
+              '<div class="finale-motif">♡</div>' +
+              '<div class="finale-deco-line"></div>' +
+              '<img class="finale-gif" src="第二段/肉桂拿戒指_動圖.gif" alt="肉桂拿戒指">' +
+              '<div class="finale-text">我們的故事還要繼續下去</div>' +
+              '<div class="finale-signature">' +
+                '<span class="finale-sign-lead">愛你的</span>' +
+                '<span class="finale-sign-names">永名 &amp; 肉桂</span>' +
+              '</div>' +
+            '</div>'
+        },
+        // 整場真正的最後一頁：謝謝收看（影片＋專屬背景音樂，都無限循環播放）
+        {
+          type: 'html',
+          html:
+            '<div class="thanks-block">' +
+              '<div class="thanks-motif">♡</div>' +
+              '<div class="thanks-deco-line"></div>' +
+              '<video class="thanks-video" src="第二段/肉桂跑滾輪.mp4" muted loop playsinline preload="auto"></video>' +
+              '<div class="thanks-text">謝謝大家的收看</div>' +
+            '</div>',
+          onEnter: (el) => {
+            audio.pause(); // 保險：這頁有自己專屬的背景音樂，先確保共用的第二段音樂不會疊在一起
+            const video = el.querySelector('.thanks-video');
+            if (video) {
+              video.muted = true;
+              video.currentTime = 0;
+              video.play().catch(() => {});
+            }
+            playEndingAudioIfAny();
+          },
+          onLeave: (el) => {
+            const video = el.querySelector('.thanks-video');
+            if (video) video.pause();
+            stopEndingAudioIfAny();
+          }
+        }
       ]
     }
   ]
@@ -1567,6 +1738,20 @@ function stopPrologueAudioIfAny() {
 const interludeAudio = document.getElementById('interlude-audio');
 if (CONFIG.interludeAudioSrc) interludeAudio.src = CONFIG.interludeAudioSrc;
 interludeAudio.volume = CONFIG.interludeVolume;
+
+// 整場最後一頁（謝謝收看）專用的背景音樂：一進到那頁就無限循環播放，離開時停掉
+const endingAudio = document.getElementById('ending-audio');
+if (CONFIG.endingAudioSrc) endingAudio.src = CONFIG.endingAudioSrc;
+endingAudio.volume = CONFIG.endingVolume;
+function playEndingAudioIfAny() {
+  if (!CONFIG.endingAudioSrc) return;
+  endingAudio.currentTime = 0;
+  endingAudio.play().catch(() => {});
+}
+function stopEndingAudioIfAny() {
+  if (!CONFIG.endingAudioSrc) return;
+  endingAudio.pause();
+}
 
 const stageWrap = document.getElementById('stage-wrap');
 const stage = document.getElementById('stage');
