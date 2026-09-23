@@ -271,6 +271,77 @@
   }
   .photo-block-duo-img:nth-child(1){ transform:rotate(-2.4deg); }
   .photo-block-duo-img:nth-child(2){ transform:rotate(2.4deg); }
+  .photo-block-duo-video{
+    max-width:47%;
+    max-height:96%;
+    object-fit:cover;
+    border-radius:2px;
+    background:#fff;
+    border:7px solid #fff;
+    border-bottom-width:18px;
+    box-shadow:0 14px 32px rgba(180,120,140,0.26), 0 2px 8px rgba(180,120,140,0.15);
+  }
+  .photo-block-duo-video:nth-child(1){ transform:rotate(-2.4deg); }
+  .photo-block-duo-video:nth-child(2){ transform:rotate(2.4deg); }
+  .photo-block-quad{
+    display:flex; align-items:center; justify-content:center;
+    gap:14px;
+    width:100%; flex:1; min-height:0;
+  }
+  .photo-block-quad-img{
+    max-width:23.5%;
+    max-height:94%;
+    object-fit:contain;
+    border-radius:2px;
+    background:#fff;
+    border:6px solid #fff;
+    border-bottom-width:16px;
+    box-shadow:0 12px 28px rgba(180,120,140,0.24), 0 2px 7px rgba(180,120,140,0.14);
+  }
+  .photo-block-quad-img:nth-child(1){ transform:rotate(-3deg); }
+  .photo-block-quad-img:nth-child(2){ transform:rotate(1.6deg); }
+  .photo-block-quad-img:nth-child(3){ transform:rotate(-1.6deg); }
+  .photo-block-quad-img:nth-child(4){ transform:rotate(3deg); }
+  .photo-block-trio{
+    display:flex; align-items:center; justify-content:center;
+    gap:16px;
+    width:100%; flex:1; min-height:0;
+  }
+  .photo-block-trio-img{
+    max-width:31%;
+    max-height:94%;
+    object-fit:contain;
+    border-radius:2px;
+    background:#fff;
+    border:7px solid #fff;
+    border-bottom-width:19px;
+    box-shadow:0 13px 30px rgba(180,120,140,0.25), 0 2px 7px rgba(180,120,140,0.15);
+  }
+  .photo-block-trio-img:nth-child(1){ transform:rotate(-2.6deg); }
+  .photo-block-trio-img:nth-child(2){ transform:rotate(2deg); }
+  .photo-block-trio-img:nth-child(3){ transform:rotate(-1.8deg); }
+
+  /* ---- 特殊版型：照片是很窄很高的手機截圖（例如肉麻限動），把文字挪到旁邊，讓兩張照片可以放大、盡量撐滿高度 ---- */
+  .photo-block-duo-featured{
+    flex-direction:row;
+    gap:3.2vw;
+  }
+  .photo-block-duo-featured .photo-block-duo{
+    flex:0 0 auto;
+    width:auto;
+    height:94%;
+    gap:20px;
+  }
+  .photo-block-duo-featured .photo-block-duo-img{
+    max-width:none;
+    width:auto;
+    height:100%;
+    max-height:100%;
+  }
+  .photo-block-duo-featured .photo-block-caption{
+    max-width:18%;
+    flex:0 0 auto;
+  }
 
   /* 隨機補在照片頁空白處的小裝飾（愛心／小花），由 JS 依每頁實際排版算出空白位置後加上，避免畫面太空洞 */
   .block-decor{
@@ -398,10 +469,12 @@
   .thanks-text{
     font-family:'Noto Serif TC', serif;
     font-weight:500;
-    font-size:clamp(26px, 3.6vw, 46px);
+    font-size:clamp(20px, 3.6vw, 46px);
     color:var(--text-dark);
     letter-spacing:2px;
     opacity:0;
+    max-width:86%;
+    line-height:1.6;
     animation:finaleFadeUp 1.3s ease 1.25s both;
   }
 
@@ -612,6 +685,7 @@
     border:1.5px solid var(--accent-vivid);
     box-shadow:0 8px 24px rgba(217,79,120,0.2);
     transition:opacity .35s ease, transform .35s ease;
+    max-width:92vw;
   }
   /* 自動播放模式下：滑鼠不在控制列範圍內（含小點）才收合，只要還在範圍內就一直顯示 */
   #controls-zone.auto-hide:not(:hover) #controls{
@@ -632,6 +706,7 @@
     cursor:pointer;
     transition:all .2s ease;
     white-space:nowrap;
+    flex:0 0 auto;
   }
   #controls button:hover{
     background:var(--accent-vivid);
@@ -643,7 +718,19 @@
     background:transparent;
   }
 
-  #dots{ display:flex; gap:6px; align-items:center; margin:0 4px; }
+  #dots{
+    display:flex; gap:6px; align-items:center; margin:0 4px;
+    max-width:26vw;
+    min-width:56px;
+    overflow-x:auto;
+    scroll-behavior:smooth;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+    mask-image:linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  }
+  #dots::-webkit-scrollbar{ display:none; height:0; }
+  #dots .dot, #dots .dot-special{ flex:0 0 auto; }
   #page-counter{
     font-family:'Cormorant Garamond', serif;
     font-weight:600;
@@ -657,6 +744,7 @@
     background:rgba(217,79,120,0.1);
     white-space:nowrap;
     user-select:none;
+    flex:0 0 auto;
   }
   .dot{
     width:7px; height:7px; border-radius:50%;
@@ -713,7 +801,8 @@
   .overlay.hidden{
     opacity:0; visibility:hidden; pointer-events:none;
   }
-  #gate-overlay{ opacity:0; visibility:hidden; }
+  /* 整體版面（含「繼續」按鈕）往上偏移一點：按下繼續切到下一頁（求婚頁）時，滑鼠位置才不會太靠近「不願意」按鈕，導致它一開始就先飄走 */
+  #gate-overlay{ opacity:0; visibility:hidden; padding-bottom:9vh; }
   #gate-overlay.visible{ opacity:1; visibility:visible; }
 
   /* ---------- 求婚頁：願意 / 不願意 ---------- */
@@ -931,6 +1020,19 @@
 
   @media (max-width:900px), (max-height:640px){
     #side-ribbon, #corner-tag{ display:none; }
+    /* 直式窄螢幕（畫面高度較矮）：結尾頁的影片縮小、間距縮小、裝飾愛心先隱藏，避免文字被卡片邊框裁掉 */
+    .thanks-block{ gap:8px; }
+    .thanks-motif, .thanks-deco-line{ display:none; }
+    .thanks-video{ max-height:38%; max-width:48%; }
+    .thanks-text{ font-size:clamp(15px, 3.2vw, 46px); line-height:1.4; }
+  }
+
+  /* 頁數變多之後，窄螢幕下控制列要更精簡，避免整排超出畫面寬度 */
+  @media (max-width:640px){
+    #controls{ gap:8px; padding:8px 12px; max-width:94vw; }
+    #controls button{ font-size:12px; padding:6px 10px; }
+    #dots{ max-width:30vw; gap:5px; }
+    #page-counter{ font-size:13px; padding:4px 10px; margin:0 2px; }
   }
 </style>
 </head>
@@ -1082,12 +1184,12 @@
 
 <div id="controls-zone">
   <div id="controls">
-    <button id="btn-prev" title="上一頁">‹ 上一頁</button>
+    <button id="btn-prev" title="上一頁">‹</button>
     <button id="btn-playpause" title="播放/暫停">⏸</button>
-    <button id="btn-auto-toggle" title="切換自動播放">自動播放：開</button>
+    <button id="btn-auto-toggle" title="切換自動播放">自動：開</button>
     <div id="dots"></div>
     <span id="page-counter" title="目前頁碼／總頁數（僅供對照，畫面上不會顯示）"></span>
-    <button id="btn-next" title="下一頁">下一頁 ›</button>
+    <button id="btn-next" title="下一頁">›</button>
   </div>
   <div id="controls-dot" title="顯示控制列"></div>
 </div>
@@ -1385,7 +1487,7 @@ const CONFIG = {
         type: 'html',
         html: '<div class="prologue-placeholder">於是…</div>',
         onEnter: (el, advance) => {
-          const silenceMs = 2000; // 音樂淡出後，安靜停留幾毫秒才接續第一段
+          const silenceMs = 2500; // 音樂淡出後，安靜停留幾毫秒才接續第一段（跟音樂淡出的 2.5 秒加起來，這頁總共停留 5 秒）
           fadeAudio(prologueAudio, 0, CONFIG.fadeSeconds, () => {
             prologueAudio.pause();
             el._timer = managedSetTimeout(advance, silenceMs);
@@ -1437,13 +1539,16 @@ const CONFIG = {
               '<div class="photo-block-caption">不捨得回家又續攤IKEA，當天走很近還差點牽到手</div>' +
             '</div>'
         },
-        // 第五張
+        // 第五張（雙圖）
         {
           type: 'html',
           html:
             '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/相約去吃藏壽司.JPEG" alt="相約去吃藏壽司">' +
-              '<div class="photo-block-caption">又再約出去吃妳最愛的壽司</div>' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/交往前約吃飯.JPEG" alt="交往前約吃飯">' +
+                '<img class="photo-block-duo-img" src="第一段/相約去吃藏壽司.JPEG" alt="相約去吃藏壽司">' +
+              '</div>' +
+              '<div class="photo-block-caption">又再單獨約吃飯、看電影</div>' +
             '</div>'
         },
         // 第六張
@@ -1455,28 +1560,19 @@ const CONFIG = {
               '<div class="photo-block-caption">覺得時機成熟了，在文化中心散步的時候直接告白</div>' +
             '</div>'
         },
-        // 第七張（雙圖）
+        // 第七張（雙圖，照片是很窄很高的截圖，放大照片、文字改放旁邊）
         {
           type: 'html',
           html:
-            '<div class="photo-block">' +
+            '<div class="photo-block photo-block-duo-featured">' +
               '<div class="photo-block-duo">' +
                 '<img class="photo-block-duo-img" src="第一段/肉麻限動.PNG" alt="肉麻限動">' +
                 '<img class="photo-block-duo-img" src="第一段/肉麻限動2.PNG" alt="肉麻限動2">' +
               '</div>' +
-              '<div class="photo-block-caption">在一起後發始發肉麻限動</div>' +
+              '<div class="photo-block-caption">在一起後開始PO肉麻的限動</div>' +
             '</div>'
         },
         // 第八張
-        {
-          type: 'html',
-          html:
-            '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/同框不知道在彆扭什麼.JPEG" alt="同框不知道在彆扭什麼">' +
-              '<div class="photo-block-caption">別人幫忙拍就很彆扭</div>' +
-            '</div>'
-        },
-        // 第九張
         {
           type: 'html',
           html:
@@ -1485,7 +1581,7 @@ const CONFIG = {
               '<div class="photo-block-caption">第一次認真甜蜜同框</div>' +
             '</div>'
         },
-        // 第十張
+        // 第九張
         {
           type: 'html',
           html:
@@ -1494,7 +1590,7 @@ const CONFIG = {
               '<div class="photo-block-caption">第一次幫妳過生日，送的對錶</div>' +
             '</div>'
         },
-        // 第十一張（雙圖）
+        // 第十張（雙圖）
         {
           type: 'html',
           html:
@@ -1506,16 +1602,20 @@ const CONFIG = {
               '<div class="photo-block-caption">把我拍的很帥，我也把你拍得很正</div>' +
             '</div>'
         },
-        // 第十二張
+        // 第十一張（三圖）
         {
           type: 'html',
           html:
             '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/玩累了靠著我睡著.JPEG" alt="玩累了靠著我睡著">' +
-              '<div class="photo-block-caption">玩累了靠著我睡著</div>' +
+              '<div class="photo-block-trio">' +
+                '<img class="photo-block-trio-img" src="第一段/玩累了靠著我睡著.JPEG" alt="玩累了靠著我睡著">' +
+                '<img class="photo-block-trio-img" src="第一段/好阿又睡.JPEG" alt="好阿又睡">' +
+                '<img class="photo-block-trio-img" src="第一段/好阿又睡2.JPEG" alt="好阿又睡2">' +
+              '</div>' +
+              '<div class="photo-block-caption">玩累了就直接睡覺♡</div>' +
             '</div>'
         },
-        // 第十三張（雙圖）
+        // 第十二張（雙圖）
         {
           type: 'html',
           html:
@@ -1527,31 +1627,54 @@ const CONFIG = {
               '<div class="photo-block-caption">還熱血騎車載你衝墾丁</div>' +
             '</div>'
         },
-        // 第十四張
+        // 第十三張（雙圖：考駕照的過程）
         {
           type: 'html',
           html:
             '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/為了能載妳出去玩 去考駕照.JPEG" alt="為了能載妳出去玩去考駕照">' +
-              '<div class="photo-block-caption">為了能開車載妳出去玩，馬上去考駕照，騎車太累</div>' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/考駕照練習圖.png" alt="考駕照練習圖">' +
+                '<img class="photo-block-duo-img" src="第一段/考駕照時被扣分.png" alt="考駕照時被扣分">' +
+              '</div>' +
+              '<div class="photo-block-caption">為了能載妳出去玩，直接去考駕照</div>' +
             '</div>'
         },
-        // 第十五張
+        // 第十四張（雙圖）
         {
           type: 'html',
           html:
             '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/疫情也硬要出去玩的兩個人.JPEG" alt="疫情也硬要出去玩的兩個人">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/疫情也硬要出去玩的兩個人.JPEG" alt="疫情也硬要出去玩的兩個人">' +
+                '<img class="photo-block-duo-img" src="第一段/疫情嚴重也要去看鐵路.JPEG" alt="疫情嚴重也要去看鐵路">' +
+              '</div>' +
               '<div class="photo-block-caption">疫情也硬要出去玩的兩個人</div>' +
             '</div>'
         },
-        // 第十六張
+        // 第十五張（合併：照片開始崩壞、各種醜照2張、神秘的頭，共4張照片一排展示）
         {
           type: 'html',
           html:
             '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/照片開始崩壞.PNG" alt="照片開始崩壞">' +
-              '<div class="photo-block-caption">照片開始崩壞</div>' +
+              '<div class="photo-block-quad">' +
+                '<img class="photo-block-quad-img" src="第一段/照片開始崩壞.PNG" alt="照片開始崩壞">' +
+                '<img class="photo-block-quad-img" src="第一段/崩壞照片2.JPEG" alt="崩壞照片2">' +
+                '<img class="photo-block-quad-img" src="第一段/崩壞照片3.JPEG" alt="崩壞照片3">' +
+                '<img class="photo-block-quad-img" src="第一段/神秘的頭.JPEG" alt="神秘的頭">' +
+              '</div>' +
+              '<div class="photo-block-caption">照片開始崩壞、各種醜照、神秘的頭</div>' +
+            '</div>'
+        },
+        // 第十六張（合併：詭異姿勢、互比中指）
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/詭異姿勢.JPEG" alt="詭異姿勢">' +
+                '<img class="photo-block-duo-img" src="第一段/互比中指.JPEG" alt="互比中指">' +
+              '</div>' +
+              '<div class="photo-block-caption">詭異姿勢、互比中指</div>' +
             '</div>'
         },
         // 第十七張（雙圖）
@@ -1560,67 +1683,25 @@ const CONFIG = {
           html:
             '<div class="photo-block">' +
               '<div class="photo-block-duo">' +
-                '<img class="photo-block-duo-img" src="第一段/崩壞照片2.JPEG" alt="崩壞照片2">' +
-                '<img class="photo-block-duo-img" src="第一段/崩壞照片3.JPEG" alt="崩壞照片3">' +
+                '<img class="photo-block-duo-img" src="第一段/30歲生日驚喜箱.JPEG" alt="30歲生日驚喜箱">' +
+                '<img class="photo-block-duo-img" src="第一段/30歲生日驚喜箱2.JPEG" alt="30歲生日驚喜箱2">' +
               '</div>' +
-              '<div class="photo-block-caption">各種醜照</div>' +
-            '</div>'
-        },
-        // 第十八張
-        {
-          type: 'html',
-          html:
-            '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/神秘的頭.JPEG" alt="神秘的頭">' +
-              '<div class="photo-block-caption">神秘的頭</div>' +
-            '</div>'
-        },
-        // 第十九張
-        {
-          type: 'html',
-          html:
-            '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/詭異姿勢.JPEG" alt="詭異姿勢">' +
-              '<div class="photo-block-caption">詭異姿勢</div>' +
-            '</div>'
-        },
-        // 第二十張
-        {
-          type: 'html',
-          html:
-            '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/互比中指.JPEG" alt="互比中指">' +
-              '<div class="photo-block-caption">互比中指</div>' +
-            '</div>'
-        },
-        // 第二十一張
-        {
-          type: 'html',
-          html:
-            '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/好阿又睡.JPEG" alt="好阿又睡">' +
-              '<div class="photo-block-caption">好阿又睡</div>' +
-            '</div>'
-        },
-        // 第二十二張
-        {
-          type: 'html',
-          html:
-            '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/30歲生日驚喜箱.JPEG" alt="30歲生日驚喜箱">' +
               '<div class="photo-block-caption">30歲生日驚喜箱</div>' +
             '</div>'
         },
-        // 第二十三張
+        // 第十八張（雙圖）
         {
           type: 'html',
           html:
             '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/生日請我吃飯.JPEG" alt="生日請我吃飯">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第一段/生日請我吃飯.JPEG" alt="生日請我吃飯">' +
+                '<img class="photo-block-duo-img" src="第一段/生日請我吃飯2.JPEG" alt="生日請我吃飯2">' +
+              '</div>' +
               '<div class="photo-block-caption">換我生日請我吃飯</div>' +
             '</div>'
         },
-        // 第二十四張（雙圖）
+        // 第十九張（雙圖）
         {
           type: 'html',
           html:
@@ -1632,32 +1713,40 @@ const CONFIG = {
               '<div class="photo-block-caption">認真擺POSE和蕭黃奇</div>' +
             '</div>'
         },
-        // 第二十五張
+        // 第二十張（三圖）
         {
           type: 'html',
           html:
             '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/駁二日常.JPEG" alt="駁二日常">' +
-              '<div class="photo-block-caption">駁二日常</div>' +
+              '<div class="photo-block-trio">' +
+                '<img class="photo-block-trio-img" src="第一段/日常出遊.JPEG" alt="日常出遊">' +
+                '<img class="photo-block-trio-img" src="第一段/日常出遊4.JPEG" alt="日常出遊4">' +
+                '<img class="photo-block-trio-img" src="第一段/日常出遊3.JPEG" alt="日常出遊3">' +
+              '</div>' +
+              '<div class="photo-block-caption">日常出遊</div>' +
             '</div>'
         },
-        // 第二十六張
-        {
-          type: 'html',
-          html:
-            '<div class="photo-block">' +
-              '<img class="photo-block-img" src="第一段/澎湖的海邊.JPEG" alt="澎湖海邊">' +
-              '<div class="photo-block-caption">澎湖海邊</div>' +
-            '</div>'
-        },
-        // 第二十七張（雙圖）
+        // 第二十一張（雙圖）
         {
           type: 'html',
           html:
             '<div class="photo-block">' +
               '<div class="photo-block-duo">' +
-                '<img class="photo-block-duo-img" src="第一段/好看照片.JPEG" alt="好看照片">' +
-                '<img class="photo-block-duo-img" src="第一段/我們之間有太多回憶.JPEG" alt="我們之間有太多回憶">' +
+                '<img class="photo-block-duo-img" src="第一段/美照1.png" alt="美照1">' +
+                '<img class="photo-block-duo-img" src="第一段/美照2.JPEG" alt="美照2">' +
+              '</div>' +
+              '<div class="photo-block-caption">把你當Model在拍♡</div>' +
+            '</div>'
+        },
+        // 第二十二張（三圖）
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-trio">' +
+                '<img class="photo-block-trio-img" src="第一段/好看照片2.JPEG" alt="好看照片2">' +
+                '<img class="photo-block-trio-img" src="第一段/我們之間有太多回憶.JPEG" alt="我們之間有太多回憶">' +
+                '<img class="photo-block-trio-img" src="第一段/好看照片.JPEG" alt="好看照片">' +
               '</div>' +
               '<div class="photo-block-caption">我們之間有太多回憶</div>' +
             '</div>'
@@ -1666,10 +1755,154 @@ const CONFIG = {
     },
     {
       slides: [
-        "第二段/123456.png",
-        "第二段/1625311926929.jpg",
-        "第二段/71f8640d-1496-4d8a-bc60-66a3b82879a7.jfif",
-        // 整場的最後一頁：結尾畫面
+        // 第二段第一張
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第二段/我就知道.JPEG" alt="我就知道">' +
+              '<div class="photo-block-caption">我就知道妳願意!</div>' +
+            '</div>'
+        },
+        // 買房（雙圖，一張影片一張照片）
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<video class="photo-block-duo-video" src="第二段/買了房子.MP4" muted loop playsinline preload="auto"></video>' +
+                '<img class="photo-block-duo-img" src="第二段/房子原樣.JPEG" alt="房子原樣">' +
+              '</div>' +
+              '<div class="photo-block-caption">所以我們買了房子</div>' +
+            '</div>',
+          onEnter: (el) => {
+            const video = el.querySelector('.photo-block-duo-video');
+            if (video) {
+              video.currentTime = 0;
+              video.play().catch(() => {});
+            }
+          },
+          onLeave: (el) => {
+            const video = el.querySelector('.photo-block-duo-video');
+            if (video) video.pause();
+          }
+        },
+        // 改造小窩
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第二段/改造成我們喜歡的樣子.JPEG" alt="改造成我們喜歡的樣子">' +
+              '<div class="photo-block-caption">改造成愛的小窩</div>' +
+            '</div>'
+        },
+        // 小事吵架 & 主動破冰
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第二段/小事吵架.png" alt="小事吵架">' +
+                '<img class="photo-block-duo-img" src="第二段/主動破冰.png" alt="主動破冰">' +
+              '</div>' +
+              '<div class="photo-block-caption">有時小吵小鬧，但你都會主動破冰</div>' +
+            '</div>'
+        },
+        // 半夜掛急診
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<img class="photo-block-img" src="第二段/半夜掛急診.png" alt="半夜掛急診">' +
+              '<div class="photo-block-caption">妳生病時半夜載你買藥掛急診</div>' +
+            '</div>'
+        },
+        // 韓國街頭 & 釜山風景
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第二段/我在韓國的街頭.jpg" alt="我在韓國的街頭">' +
+                '<img class="photo-block-duo-img" src="第二段/釜山風景.JPEG" alt="釜山風景">' +
+              '</div>' +
+              '<div class="photo-block-caption">帶我去韓國釜山玩</div>' +
+            '</div>'
+        },
+        // 釜山坐纜車 & 飯店自拍
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第二段/釜山坐纜車.jpg" alt="釜山坐纜車">' +
+                '<img class="photo-block-duo-img" src="第二段/釜山的飯店裡拍的.png" alt="釜山的飯店裡拍的">' +
+              '</div>' +
+              '<div class="photo-block-caption">坐纜車 &amp; 飯店自拍</div>' +
+            '</div>'
+        },
+        // 喜歡小動物的你
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第二段/喜歡小動物的你.JPEG" alt="喜歡小動物的你">' +
+                '<img class="photo-block-duo-img" src="第二段/喜歡小動物的你2.JPEG" alt="喜歡小動物的你">' +
+              '</div>' +
+              '<div class="photo-block-caption">喜歡小動物的你</div>' +
+            '</div>'
+        },
+        // 第一隻鼠寶肉桂
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-trio">' +
+                '<img class="photo-block-trio-img" src="第二段/第一隻鼠寶.JPEG" alt="第一隻鼠寶">' +
+                '<img class="photo-block-trio-img" src="第二段/第一隻鼠寶2.JPEG" alt="第一隻鼠寶">' +
+                '<img class="photo-block-trio-img" src="第二段/第一隻鼠寶3.JPEG" alt="第一隻鼠寶">' +
+              '</div>' +
+              '<div class="photo-block-caption">決定迎來家裡第一隻鼠寶肉桂</div>' +
+            '</div>'
+        },
+        // 越來越可愛的肉桂
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第二段/越來越可愛.JPEG" alt="越來越可愛">' +
+                '<img class="photo-block-duo-img" src="第二段/越來越可愛2.JPEG" alt="越來越可愛">' +
+              '</div>' +
+              '<div class="photo-block-caption">越來越可愛的肉桂♡</div>' +
+            '</div>'
+        },
+        // 生日吃王品 & 陪打球
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第二段/生日吃王品.JPEG" alt="生日吃王品">' +
+                '<img class="photo-block-duo-img" src="第二段/陪我去打球.JPEG" alt="陪我去打球">' +
+              '</div>' +
+              '<div class="photo-block-caption">生日帶我吃王品，還陪我去打球</div>' +
+            '</div>'
+        },
+        // 我的生命中不能沒有你
+        {
+          type: 'html',
+          html:
+            '<div class="photo-block">' +
+              '<div class="photo-block-duo">' +
+                '<img class="photo-block-duo-img" src="第二段/我的生命中不能沒有你.png" alt="我的生命中不能沒有你">' +
+                '<img class="photo-block-duo-img" src="第二段/我的生命中不能沒有你2.JPG" alt="我的生命中不能沒有你">' +
+              '</div>' +
+              '<div class="photo-block-caption">妳已經無法在我生命的未來中缺席</div>' +
+            '</div>'
+        },
+        // 第二段最後一頁：結尾畫面（第二段共用音樂會在這頁播到真正結束，播完才會進下面 outro 的謝謝收看頁）
         {
           type: 'html',
           html:
@@ -1683,36 +1916,41 @@ const CONFIG = {
                 '<span class="finale-sign-names">永名 &amp; 肉桂</span>' +
               '</div>' +
             '</div>'
-        },
-        // 整場真正的最後一頁：謝謝收看（影片＋專屬背景音樂，都無限循環播放）
-        {
-          type: 'html',
-          html:
-            '<div class="thanks-block">' +
-              '<div class="thanks-motif">♡</div>' +
-              '<div class="thanks-deco-line"></div>' +
-              '<video class="thanks-video" src="第二段/肉桂跑滾輪.mp4" muted loop playsinline preload="auto"></video>' +
-              '<div class="thanks-text">謝謝大家的收看</div>' +
-            '</div>',
-          onEnter: (el) => {
-            audio.pause(); // 保險：這頁有自己專屬的背景音樂，先確保共用的第二段音樂不會疊在一起
-            const video = el.querySelector('.thanks-video');
-            if (video) {
-              video.muted = true;
-              video.currentTime = 0;
-              video.play().catch(() => {});
-            }
-            playEndingAudioIfAny();
-          },
-          onLeave: (el) => {
-            const video = el.querySelector('.thanks-video');
-            if (video) video.pause();
-            stopEndingAudioIfAny();
-          }
         }
       ]
     }
-  ]
+  ],
+  // 結尾頁獨立於第一段／第二段的共用音樂時間軸之外：要等第二段音樂完整播完（audio 觸發 ended，而不是被時間軸提早切斷）才會進來
+  outro: {
+    slides: [
+      // 整場真正的最後一頁：謝謝收看（影片＋專屬背景音樂，都無限循環播放）
+      {
+        type: 'html',
+        html:
+          '<div class="thanks-block">' +
+            '<div class="thanks-motif">♡</div>' +
+            '<div class="thanks-deco-line"></div>' +
+            '<video class="thanks-video" src="第二段/肉桂跑滾輪.mp4" muted loop playsinline preload="auto"></video>' +
+            '<div class="thanks-text">感謝所有現場參與及幫忙的小夥伴們</div>' +
+          '</div>',
+        onEnter: (el) => {
+          audio.pause(); // 保險：這頁有自己專屬的背景音樂，先確保共用的第二段音樂不會疊在一起
+          const video = el.querySelector('.thanks-video');
+          if (video) {
+            video.muted = true;
+            video.currentTime = 0;
+            video.play().catch(() => {});
+          }
+          playEndingAudioIfAny();
+        },
+        onLeave: (el) => {
+          const video = el.querySelector('.thanks-video');
+          if (video) video.pause();
+          stopEndingAudioIfAny();
+        }
+      }
+    ]
+  }
 };
 /* ========================================================================= */
 
@@ -1857,6 +2095,11 @@ CONFIG.prologue.slides.forEach((raw) => flatSlides.push(normalizeSlide(raw, 0)))
 CONFIG.chapters.forEach((ch, ci) => {
   ch.slides.forEach((raw) => flatSlides.push(normalizeSlide(raw, ci + 1)));
 });
+// 結尾頁（outro）不算在第一段／第二段的音樂時間軸內，用獨立的 chapter 編號（第二段之後 +1）
+const OUTRO_CHAPTER = CONFIG.chapters.length + 1;
+if (CONFIG.outro && CONFIG.outro.slides) {
+  CONFIG.outro.slides.forEach((raw) => flatSlides.push(normalizeSlide(raw, OUTRO_CHAPTER)));
+}
 
 // ---- 空白處隨機小裝飾：等圖片都讀取完，量出照片＋文字實際佔的範圍，再避開那塊範圍隨機灑一些愛心／小花 ----
 function whenImagesReady(imgs, cb) {
@@ -1954,7 +2197,7 @@ flatSlides.forEach((s, i) => {
 
 // 第一段／第二段的照片頁（.photo-block）都是一開始就建立好的，統一在這裡補上空白處裝飾
 document.querySelectorAll('.photo-block').forEach((block) => {
-  const imgs = Array.from(block.querySelectorAll('.photo-block-img, .photo-block-duo-img'));
+  const imgs = Array.from(block.querySelectorAll('.photo-block-img, .photo-block-duo-img, .photo-block-trio-img, .photo-block-quad-img'));
   const caption = block.querySelector('.photo-block-caption');
   const note = block.querySelector('.photo-block-note');
   whenImagesReady(imgs, () => {
@@ -1983,10 +2226,20 @@ if (firstCh2Dot) {
   dotsContainer.appendChild(pause2Dot);
 }
 
+// 頁數變多之後 #dots 會變成可橫向捲動的小視窗，每次切頁都把目前作用中的小點捲到可視範圍內
+function scrollDotIntoView(dotEl) {
+  if (!dotEl || !dotsContainer) return;
+  const left = dotEl.offsetLeft - (dotsContainer.clientWidth - dotEl.offsetWidth) / 2;
+  dotsContainer.scrollTo({ left, behavior: 'smooth' });
+}
+
 function setSpecialDotActive(key) {
   startDot.classList.toggle('active', key === 'start');
   pause1Dot.classList.toggle('active', key === 'pause1');
   pause2Dot.classList.toggle('active', key === 'pause2');
+  if (key === 'start') scrollDotIntoView(startDot);
+  else if (key === 'pause1') scrollDotIntoView(pause1Dot);
+  else if (key === 'pause2') scrollDotIntoView(pause2Dot);
 }
 
 // 目前顯示中的一般投影片（如果有的話）也一併停掉，離開起始頁／暫停畫面時才不會有殘留的計時器/動畫繼續跑
@@ -2061,6 +2314,12 @@ function computeBoundaries() {
     boundaries[prologueCount + ch1Count + i] = { start: ch1End + i * ch2SlideDur, end: ch1End + (i + 1) * ch2SlideDur };
   }
 
+  // 結尾頁（outro）不使用音樂時間軸，跟序章一樣放佔位值；它要等第二段音樂 ended 事件才會顯示
+  const outroCount = (CONFIG.outro && CONFIG.outro.slides) ? CONFIG.outro.slides.length : 0;
+  for (let i = 0; i < outroCount; i++) {
+    boundaries[prologueCount + ch1Count + ch2Count + i] = { start: 0, end: 0 };
+  }
+
   if (audioDuration) {
     progressMarker.style.left = (ch1End / audioDuration * 100) + '%';
   }
@@ -2084,6 +2343,7 @@ function showSlide(flatIndex) {
     if (!willActive && wasActive && typeof s.onLeave === 'function') s.onLeave(s.mountEl || s.el);
     s.el.classList.toggle('active', willActive);
     s.dot.classList.toggle('active', willActive);
+    if (willActive) scrollDotIntoView(s.dot);
   });
   currentFlatIndex = flatIndex;
   if (pageCounterEl) pageCounterEl.textContent = (flatIndex + 1) + ' / ' + flatSlides.length;
@@ -2253,7 +2513,7 @@ function enterChapter1() {
 audio.addEventListener('timeupdate', () => {
   if (!started || gateActive) return;
   const cur = flatSlides[currentFlatIndex];
-  if (!cur || cur.chapter === 0) return;
+  if (!cur || cur.chapter === 0 || cur.chapter === OUTRO_CHAPTER) return;
 
   const t = audio.currentTime;
   const ch1End = CONFIG.chapter1EndSeconds;
@@ -2275,15 +2535,22 @@ audio.addEventListener('timeupdate', () => {
   if (!autoMode) return;
 
   for (let i = 0; i < boundaries.length; i++) {
-    if (flatSlides[i].chapter === 0) continue; // 跳過序章的佔位區間
+    if (flatSlides[i].chapter === 0 || flatSlides[i].chapter === OUTRO_CHAPTER) continue; // 跳過序章／結尾頁的佔位區間
     if (t >= boundaries[i].start && t < boundaries[i].end) {
       if (i !== currentFlatIndex) showSlide(i);
       break;
     }
-    if (i === boundaries.length - 1 && t >= boundaries[i].end) {
-      if (currentFlatIndex !== i) showSlide(i);
-    }
   }
+});
+
+// ---- 第二段的共用音樂真正播放完畢（觸發原生 ended，而不是被時間軸提早切斷）之後，才自動進入結尾頁 ----
+audio.addEventListener('ended', () => {
+  if (!started || gateActive) return;
+  if (!autoMode) return;
+  const cur = flatSlides[currentFlatIndex];
+  if (!cur || cur.chapter !== 2) return;
+  const idx = flatSlides.findIndex((s) => s.chapter === OUTRO_CHAPTER);
+  if (idx !== -1) showSlide(idx);
 });
 
 // ---- 手動翻頁 ----
@@ -2312,8 +2579,25 @@ function goTo(flatIndex) {
     return;
   }
 
+  // 結尾頁：不在音樂時間軸上，單純切換畫面即可（它自己的 onEnter 會處理音樂/影片）
+  if (targetChapter === OUTRO_CHAPTER) {
+    showSlide(flatIndex);
+    return;
+  }
+
+  // 從結尾頁返回第二段：共用音樂可能已經自然播完並停止，回去時要重新從對應片段播放
+  if (curChapter === OUTRO_CHAPTER) {
+    const b = boundaries[flatIndex];
+    audio.volume = 1;
+    audio.currentTime = b.start + 0.05;
+    audio.play();
+    showSlide(flatIndex);
+    return;
+  }
+
   const b = boundaries[flatIndex];
   audio.currentTime = b.start + 0.05;
+  if (audio.paused) audio.play();
   showSlide(flatIndex);
 }
 
@@ -2345,6 +2629,13 @@ function jumpToDot(flatIndex) {
     return;
   }
 
+  // 結尾頁：不在音樂時間軸上，先關掉共用音樂，其餘交給它自己的 onEnter 處理
+  if (targetChapter === OUTRO_CHAPTER) {
+    audio.pause();
+    showSlide(flatIndex);
+    return;
+  }
+
   if (curChapter === 0) stopPrologueAudioIfAny();
   const b = boundaries[flatIndex];
   audio.volume = 1;
@@ -2369,7 +2660,7 @@ function resetToStart() {
   gateActive = false;
 
   autoMode = true;
-  btnAutoToggle.textContent = '自動播放：開';
+  btnAutoToggle.textContent = '自動：開';
   btnAutoToggle.classList.remove('off');
   btnPlayPause.textContent = '⏸';
   progressFill.style.width = '0%';
@@ -2431,7 +2722,7 @@ btnPlayPause.addEventListener('click', () => {
 
 btnAutoToggle.addEventListener('click', () => {
   autoMode = !autoMode;
-  btnAutoToggle.textContent = autoMode ? '自動播放：開' : '自動播放：關';
+  btnAutoToggle.textContent = autoMode ? '自動：開' : '自動：關';
   btnAutoToggle.classList.toggle('off', !autoMode);
   updateAutoHideClass();
 });
