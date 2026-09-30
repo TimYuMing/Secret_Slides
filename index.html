@@ -2334,6 +2334,11 @@ audio.addEventListener('loadedmetadata', () => {
 });
 
 function showSlide(flatIndex) {
+  // 手動切頁（或任何其他頁面切換）發生時，先取消還沒觸發的「音樂停了再等 5 秒」計時器，避免之後突然跳頁
+  if (finaleAdvanceTimer) {
+    clearManagedTimer(finaleAdvanceTimer);
+    finaleAdvanceTimer = null;
+  }
   flatSlides.forEach((s, i) => {
     const wasActive = s.el.classList.contains('active');
     const willActive = i === flatIndex;
@@ -2544,13 +2549,19 @@ audio.addEventListener('timeupdate', () => {
 });
 
 // ---- 第二段的共用音樂真正播放完畢（觸發原生 ended，而不是被時間軸提早切斷）之後，才自動進入結尾頁 ----
+// 音樂停了之後，「我們的故事還要繼續下去」這頁還要再多停留 5 秒，才真的換到結尾頁
+let finaleAdvanceTimer = null;
 audio.addEventListener('ended', () => {
   if (!started || gateActive) return;
   if (!autoMode) return;
   const cur = flatSlides[currentFlatIndex];
   if (!cur || cur.chapter !== 2) return;
   const idx = flatSlides.findIndex((s) => s.chapter === OUTRO_CHAPTER);
-  if (idx !== -1) showSlide(idx);
+  if (idx === -1) return;
+  finaleAdvanceTimer = managedSetTimeout(() => {
+    finaleAdvanceTimer = null;
+    showSlide(idx);
+  }, 7000);
 });
 
 // ---- 手動翻頁 ----
